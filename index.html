@@ -3,424 +3,771 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>研产销一体化制造业供应链经营分析报告</title>
+<title>研产销一体化供应链经营报告看板</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#f5f7fa;color:#1f2937;font-size:13px;line-height:1.6}
-.header{background:#1e3a8a;color:#fff;padding:14px 24px;box-shadow:0 2px 6px rgba(0,0,0,.12);position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between}
-.header h1{font-size:17px;font-weight:600;letter-spacing:.3px}
-.nav-tabs{display:flex;gap:4px;flex-wrap:wrap}
-.nav-tab{padding:5px 14px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;border:none;background:rgba(255,255,255,.15);color:#fff;transition:.2s}
-.nav-tab:hover{background:rgba(255,255,255,.25)}
-.nav-tab.active{background:#fff;color:#1e3a8a}
-.container{max-width:1100px;margin:0 auto;padding:20px}
-.panel{display:none;animation:fadeIn .3s ease}
-.panel.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#f0f2f5;color:#1f2937;font-size:13px;line-height:1.6;overflow:hidden;height:100vh}
+.app{display:flex;flex-direction:column;height:100vh}
 
-.report-title{font-size:18px;font-weight:700;color:#1e3a8a;text-align:center;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #1e3a8a}
-.report-info{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:14px 18px;margin-bottom:18px;font-size:12px;color:#1e40af}
-.report-info p{margin:4px 0}
+/* 顶部导航 */
+.topbar{background:#1e3a8a;color:#fff;padding:0 16px;height:48px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar h1{font-size:15px;font-weight:600;white-space:nowrap}
+.topnav{display:flex;gap:2px;overflow-x:auto;flex:1;justify-content:flex-end;margin-left:16px}
+.topnav::-webkit-scrollbar{display:none}
+.nav-item{padding:6px 12px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;border:none;background:transparent;color:rgba(255,255,255,.75);transition:.15s;white-space:nowrap;flex-shrink:0}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.1)}
+.nav-item.active{color:#1e3a8a;background:#fff}
 
-.section-title{font-size:16px;font-weight:700;color:#1e3a8a;margin:24px 0 10px;padding-left:12px;border-left:4px solid #1e3a8a}
-.dept-tag{font-size:12px;color:#4b5563;margin-bottom:12px;padding:6px 12px;background:#f3f4f6;border-radius:4px;display:inline-block}
-.sub-title{font-size:14px;font-weight:600;color:#374151;margin:16px 0 8px}
+/* 主体 */
+.main{display:flex;flex:1;overflow:hidden}
 
-.metric-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;background:#fff;border:1px solid #e5e7eb}
-.metric-table th{background:#f8fafc;padding:8px 10px;text-align:left;font-weight:600;color:#374151;border:1px solid #e5e7eb}
-.metric-table td{padding:7px 10px;border:1px solid #f3f4f6;vertical-align:middle;color:#374151}
-.metric-table tr:hover td{background:#f8fafc}
-.metric-table td input,.metric-table td select{width:100%;border:none;border-bottom:1px solid #d1d5db;padding:4px 2px;font-size:12px;background:transparent;text-align:center}
-.metric-table td input:focus{outline:none;border-bottom-color:#3b82f6}
-.metric-table td:nth-child(2),.metric-table td:nth-child(3),.metric-table td:nth-child(4){text-align:center;width:12%}
-.metric-table td:nth-child(5){width:32%;color:#6b7280;font-size:11px}
+/* 左侧边栏 - 操作面板 */
+.sidebar{width:340px;background:#fff;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;transition:width .2s}
+.sidebar.collapsed{width:0;border:none}
+.sidebar-header{padding:12px 16px;border-bottom:1px solid #f3f4f6;font-weight:600;font-size:13px;color:#374151;display:flex;justify-content:space-between;align-items:center}
+.sidebar-body{flex:1;overflow-y:auto;padding:12px 16px}
+.sidebar-body::-webkit-scrollbar{width:4px}
+.sidebar-body::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
+.toggle-btn{width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b7280;font-size:12px;border:none;background:transparent}
+.toggle-btn:hover{color:#1e3a8a}
+
+/* 右侧内容 */
+.content{flex:1;overflow-y:auto;padding:16px 20px;background:#f0f2f5}
+.content::-webkit-scrollbar{width:6px}
+.content::-webkit-scrollbar-thumb{background:#c1c5cb;border-radius:3px}
+
+/* 面板 */
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* KPI 卡片行 */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.kpi-card{background:#fff;border-radius:6px;padding:12px 14px;border:1px solid #e5e7eb;cursor:pointer;transition:.15s}
+.kpi-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06);border-color:#bfdbfe}
+.kpi-card .label{font-size:11px;color:#6b7280;margin-bottom:4px}
+.kpi-card .val{font-size:20px;font-weight:700;color:#1e3a8a}
+.kpi-card .sub{font-size:11px;color:#6b7280;margin-top:3px}
+.kpi-card .sub .up{color:#16a34a}
+.kpi-card .sub .down{color:#dc2626}
+
+/* 图表容器 */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.chart-box{background:#fff;border-radius:6px;padding:12px;border:1px solid #e5e7eb}
+.chart-box .chart-title{font-size:12px;font-weight:600;color:#374151;margin-bottom:8px;padding-left:8px;border-left:3px solid #1e3a8a}
+.chart{height:220px}
+.chart-full{grid-column:1/-1}
+
+/* 左侧表单 */
+.form-group{margin-bottom:12px}
+.form-label{font-size:11px;color:#6b7280;margin-bottom:4px;display:block;font-weight:500}
+.form-input{width:100%;padding:6px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;color:#374151;background:#fff;transition:.15s}
+.form-input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.1)}
+.form-input::placeholder{color:#9ca3af}
+.form-row{display:flex;gap:8px}
+.form-row .form-group{flex:1}
+
+/* 指标编辑列表 */
+.metric-list{background:#f8fafc;border-radius:5px;padding:8px;margin-bottom:10px}
+.metric-item{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:12px}
+.metric-item:last-child{border-bottom:none}
+.metric-name{flex:1;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.metric-input{width:70px;padding:4px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center}
+.metric-input:focus{outline:none;border-color:#3b82f6}
+
+/* 文本编辑区 */
+.textarea-edit{width:100%;min-height:60px;padding:8px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;color:#374151;resize:vertical;line-height:1.7}
+.textarea-edit:focus{outline:none;border-color:#3b82f6}
+
+/* 表格展示 */
+.show-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border-radius:6px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:12px}
+.show-table th{background:#f8fafc;padding:8px 10px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb}
+.show-table td{padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#374151}
+.show-table tr:last-child td{border-bottom:none}
+.show-table td:nth-child(2),.show-table td:nth-child(3),.show-table td:nth-child(4){text-align:center}
 
 .variance-good{color:#16a34a;font-weight:700}
 .variance-bad{color:#dc2626;font-weight:700}
 .variance-neutral{color:#6b7280}
 
-.text-fill{background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:14px 18px;margin-bottom:16px;font-size:12px;line-height:2.2;color:#374151}
-.text-fill b{font-weight:600;color:#1e3a8a}
-.inline-input{border:none;border-bottom:1px solid #9ca3af;padding:2px 4px;font-size:12px;color:#1e40af;font-weight:600;background:transparent;min-width:40px;text-align:center}
-.inline-input:focus{outline:none;border-bottom-color:#3b82f6}
-.line-input{border:none;border-bottom:1px solid #9ca3af;padding:2px 4px;font-size:12px;color:#1e40af;background:transparent;width:85%;text-align:left}
-.line-input:focus{outline:none;border-bottom-color:#3b82f6}
-
-.rank-table .rank-1{background:#dbeafe}
-.rank-table .rank-2{background:#eff6ff}
-.rank-table .rank-3{background:#f8fafc}
-.rank-table .rank-last{background:#fee2e2}
-
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
-.kpi-box{background:#fff;border-radius:6px;padding:14px;text-align:center;border:1px solid #e5e7eb}
-.kpi-box .label{font-size:11px;color:#6b7280;margin-bottom:4px}
-.kpi-box .val{font-size:22px;font-weight:700;color:#1e3a8a}
-.kpi-box .sub{font-size:11px;color:#6b7280;margin-top:4px}
-
-.btn{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:4px;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:.2s}
+/* 按钮 */
+.btn-group{display:flex;gap:6px;margin-top:10px}
+.btn{flex:1;padding:6px 0;border-radius:4px;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:.15s;text-align:center}
 .btn-primary{background:#1e3a8a;color:#fff}
+.btn-primary:hover{background:#1e40af}
 .btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
-.export-bar{display:flex;justify-content:flex-end;gap:6px;margin-bottom:10px}
+.btn-secondary:hover{background:#e5e7eb}
 
-.upload-zone{border:2px dashed #d1d5db;border-radius:8px;padding:28px;text-align:center;cursor:pointer;background:#fafafa;transition:.2s}
+/* 折叠触发条 */
+.collapser{width:4px;background:#e5e7eb;cursor:col-resize;flex-shrink:0;position:relative}
+.collapser:hover{background:#bfdbfe}
+.collapser::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:2px;height:16px;background:#9ca3af;border-radius:1px}
+
+/* 标签 */
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:500;background:#eff6ff;color:#1e40af;margin-bottom:8px}
+
+/* 供应商排名 */
+.rank-1{background:#dbeafe}
+.rank-2{background:#eff6ff}
+.rank-3{background:#f8fafc}
+.rank-last{background:#fee2e2}
+
+/* 填空展示 */
+.fill-block{background:#fff;border-radius:6px;padding:14px 16px;border:1px solid #e5e7eb;margin-bottom:12px;font-size:12px;line-height:2;color:#374151}
+.fill-block b{color:#1e3a8a;font-weight:600}
+
+/* 上传 */
+.upload-zone{border:2px dashed #d1d5db;border-radius:6px;padding:20px;text-align:center;cursor:pointer;background:#fafafa;transition:.15s}
 .upload-zone:hover{border-color:#3b82f6;background:#eff6ff}
-.field-map-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f3f4f6}
-.field-map-label{width:100px;font-size:12px}
-.field-map-select{flex:1;padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px}
 
+/* 隐藏 */
 .hidden{display:none}
-.alert{padding:10px 14px;border-radius:5px;margin-bottom:12px;font-size:12px;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
-.chart-box{background:#fff;border-radius:6px;padding:12px;border:1px solid #e5e7eb;margin-bottom:12px}
-.chart{width:100%;height:260px}
+
+/* 响应式 */
+@media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="header">
-<h1>研产销一体化制造业供应链经营分析报告</h1>
-<div class="nav-tabs">
-<button class="nav-tab active" onclick="switchPanel('overview')">报告总览</button>
-<button class="nav-tab" onclick="switchPanel('rd')">一、研发板块</button>
-<button class="nav-tab" onclick="switchPanel('purchase')">二、采购板块</button>
-<button class="nav-tab" onclick="switchPanel('production')">三、生产板块</button>
-<button class="nav-tab" onclick="switchPanel('import')">数据导入</button>
-</div>
-</div>
+<div class="app">
+  <div class="topbar">
+    <h1>研产销一体化供应链经营报告看板</h1>
+    <div class="topnav">
+      <button class="nav-item active" data-panel="overview">总览</button>
+      <button class="nav-item" data-panel="rd">研发</button>
+      <button class="nav-item" data-panel="purchase">采购</button>
+      <button class="nav-item" data-panel="production">生产</button>
+      <button class="nav-item" data-panel="inventory">物控</button>
+      <button class="nav-item" data-panel="sales">销售</button>
+      <button class="nav-item" data-panel="cross">跨板块联动</button>
+      <button class="nav-item" data-panel="import">数据导入</button>
+      <button class="nav-item" data-panel="template">模板配置</button>
+      <button class="nav-item" data-panel="sim">模拟分析</button>
+    </div>
+  </div>
 
-<div class="container">
+  <div class="main">
+    <!-- 左侧操作面板 -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span id="sidebarTitle">数据录入</span>
+        <button class="toggle-btn" onclick="toggleSidebar()">◀</button>
+      </div>
+      <div class="sidebar-body" id="sidebarBody">
+        <!-- 动态生成 -->
+      </div>
+    </div>
 
-<!-- 总览 -->
-<div id="panel-overview" class="panel active">
-<div class="report-title">研产销一体化制造业供应链经营分析报告</div>
-<div class="report-info">
-<p><b>适用场景：</b>月度/季度供应链经营分析会、跨部门协同复盘、成本节降专项汇报</p>
-<p><b>数据周期：</b>默认统计自然月/季度，同比对比上年同期、环比对比上一周期</p>
-<p><b>填写要求：</b>各部门需同步填写「实际值」「目标值」「偏差率」「备注/说明」四部分内容</p>
-</div>
-<div class="kpi-row">
-<div class="kpi-box"><div class="label">研发总投入</div><div class="val">1,250万</div><div class="sub">目标1,200万 | 偏差+4.2%</div></div>
-<div class="kpi-box"><div class="label">采购总金额</div><div class="val">3,850万</div><div class="sub">目标3,600万 | 偏差+6.9%</div></div>
-<div class="kpi-box"><div class="label">总生产成本</div><div class="val">4,520万</div><div class="sub">目标4,400万 | 偏差+2.7%</div></div>
-<div class="kpi-box"><div class="label">供应链总成本占营收比</div><div class="val">68.5%</div><div class="sub">目标≤65% | 偏差+3.5%</div></div>
-<div class="kpi-box"><div class="label">整体毛利率</div><div class="val">22.3%</div><div class="sub">目标20% | 偏差+2.3%</div></div>
-</div>
-<div class="chart-box"><div id="chart-overview" class="chart"></div></div>
-</div>
+    <div class="collapser" onclick="toggleSidebar()"></div>
 
-<!-- 研发 -->
-<div id="panel-rd" class="panel">
-<div class="export-bar"><button class="btn btn-secondary" onclick="exportTable('tbl-rd-input','研发-当期投入')">导出Excel</button></div>
-<h2 class="section-title">一、研发板块（责任部门：研发部、产品部）</h2>
-<div class="dept-tag">▶ 核心关联部门：研发部/产品部/供应链管理部</div>
+    <!-- 右侧展示区 -->
+    <div class="content" id="contentArea">
 
-<h3 class="sub-title">1. 当期研发投入概况</h3>
-<table class="metric-table" id="tbl-rd-input">
-<thead><tr><th style="width:30%">指标</th><th style="width:13%">实际值</th><th style="width:13%">目标值</th><th style="width:12%">偏差率</th><th style="width:32%">备注说明</th></tr></thead>
-<tbody>
-<tr><td>在研项目总数</td><td><input value="18" data-type="int" onchange="calcVar(this)"></td><td><input value="20" data-type="int" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>当期转量产项目数</td><td><input value="3" data-type="int" onchange="calcVar(this)"></td><td><input value="4" data-type="int" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>研发周期达标率</td><td><input value="85.7" data-type="percent" onchange="calcVar(this)"></td><td><input value="90" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td>计算公式：按期交付项目数/总交付项目数</td></tr>
-<tr><td>研发总投入金额</td><td><input value="1250" data-type="currency" onchange="calcVar(this)"></td><td><input value="1200" data-type="currency" onchange="calcVar(this)"></td><td class="variance-cell"></td><td>单位：万元</td></tr>
-<tr><td>研发物料消耗占总采购额比例</td><td><input value="8.2" data-type="percent" onchange="calcVar(this)"></td><td><input value="8" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-</tbody>
-</table>
+      <!-- 总览 -->
+      <div class="panel active" id="panel-overview">
+        <div class="kpi-row">
+          <div class="kpi-card" onclick="focusEdit('kpi1')">
+            <div class="label">供应链总成本占营收比</div>
+            <div class="val" id="show-kpi1">68.5%</div>
+            <div class="sub">目标65% | <span class="down">偏差+3.5%</span></div>
+          </div>
+          <div class="kpi-card" onclick="focusEdit('kpi2')">
+            <div class="label">整体毛利率</div>
+            <div class="val" id="show-kpi2">22.3%</div>
+            <div class="sub">目标20% | <span class="up">偏差+2.3%</span></div>
+          </div>
+          <div class="kpi-card" onclick="focusEdit('kpi3')">
+            <div class="label">客户订单满足率</div>
+            <div class="val" id="show-kpi3">94.2%</div>
+            <div class="sub">目标95% | <span class="down">偏差-0.8%</span></div>
+          </div>
+          <div class="kpi-card" onclick="focusEdit('kpi4')">
+            <div class="label">全链路周转天数</div>
+            <div class="val" id="show-kpi4">42天</div>
+            <div class="sub">目标38天 | <span class="down">偏差+4天</span></div>
+          </div>
+          <div class="kpi-card" onclick="focusEdit('kpi5')">
+            <div class="label">需求预测偏差率</div>
+            <div class="val" id="show-kpi5">12.8%</div>
+            <div class="sub">目标10% | <span class="down">偏差+2.8%</span></div>
+          </div>
+          <div class="kpi-card" onclick="focusEdit('kpi6')">
+            <div class="label">营收总额</div>
+            <div class="val" id="show-kpi6">¥8,650万</div>
+            <div class="sub">环比+8.3%</div>
+          </div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-box">
+            <div class="chart-title">各板块成本占比</div>
+            <div class="chart" id="chart-pie"></div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">研产销关键指标趋势</div>
+            <div class="chart" id="chart-line"></div>
+          </div>
+        </div>
+        <div class="chart-box chart-full">
+          <div class="chart-title">跨板块协同健康度评分</div>
+          <div class="chart" id="chart-radar" style="height:280px"></div>
+        </div>
+      </div>
 
-<h3 class="sub-title">2. 研发-供应链联动指标</h3>
-<table class="metric-table" id="tbl-rd-link">
-<thead><tr><th style="width:30%">指标</th><th style="width:13%">实际值</th><th style="width:13%">目标值</th><th style="width:12%">偏差率</th><th style="width:32%">备注说明</th></tr></thead>
-<tbody>
-<tr><td>新产品物料复用率</td><td><input value="62" data-type="percent" onchange="calcVar(this)"></td><td><input value="70" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td>计算公式：通用物料数量/新产品BOM总物料数量</td></tr>
-<tr><td>新供应商平均导入周期</td><td><input value="45" data-type="int" onchange="calcVar(this)"></td><td><input value="35" data-type="int" onchange="calcVar(this)"></td><td class="variance-cell"></td><td>单位：天，从认证申请到批量采购的时长</td></tr>
-<tr><td>新产品小批量试产良率</td><td><input value="91.5" data-type="percent" onchange="calcVar(this)"></td><td><input value="95" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>试产问题闭环平均周期</td><td><input value="8" data-type="int" onchange="calcVar(this)"></td><td><input value="7" data-type="int" onchange="calcVar(this)"></td><td class="variance-cell"></td><td>单位：天</td></tr>
-</tbody>
-</table>
+      <!-- 研发 -->
+      <div class="panel" id="panel-rd">
+        <div class="tag">责任部门：研发部 / 产品部 | 关联：供应链管理部</div>
+        <div class="chart-grid">
+          <div class="chart-box"><div class="chart-title">当期研发投入概况</div>
+            <table class="show-table" id="rd-table-1"><thead><tr><th>指标</th><th>实际值</th><th>目标值</th><th>偏差率</th><th>备注</th></tr></thead><tbody></tbody></table>
+          </div>
+          <div class="chart-box"><div class="chart-title">研发-供应链联动指标</div>
+            <table class="show-table" id="rd-table-2"><thead><tr><th>指标</th><th>实际值</th><th>目标值</th><th>偏差率</th><th>备注</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+        <div class="fill-block" id="rd-fill"></div>
+      </div>
 
-<h3 class="sub-title">3. 成本前置管控分析</h3>
-<div class="text-fill">
-<b>• 设计降本达成：</b>当期研发阶段预计年降本金额 <input class="inline-input" value="320"> 万元，年度目标完成率 <input class="inline-input" value="85"> %，核心降本措施说明：<br>
-a. <input class="line-input" value="结构件材料替代：铝合金→高强度工程塑料"><br>
-b. <input class="line-input" value="板级器件归一化减少SKU 30%"><br><br>
-<b>• 选型合规性检查：</b>本期新增物料 <input class="inline-input" value="42"> 种、新增供应商 <input class="inline-input" value="5"> 家，不符合供应链准入标准项 <input class="inline-input" value="2"> 项，整改进度： <input class="line-input" value="1项已整改，1项进行中">
-</div>
-</div>
+      <!-- 采购 -->
+      <div class="panel" id="panel-purchase">
+        <div class="tag">责任部门：采购部 | 关联：质量部/财务部</div>
+        <div class="chart-box chart-full">
+          <div class="chart-title">当期采购概况</div>
+          <table class="show-table" id="pur-table-1"><thead><tr><th>指标</th><th>实际值</th><th>目标值</th><th>偏差率</th><th>备注</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="fill-block" id="pur-fill-1"></div>
+        <div class="chart-box chart-full">
+          <div class="chart-title">供应商绩效排名（Top3 / 末3）</div>
+          <table class="show-table" id="pur-table-2"><thead><tr><th>排名</th><th>供应商名称</th><th>交付及时率</th><th>质量合格率</th><th>定级</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="fill-block" id="pur-fill-2"></div>
+      </div>
 
-<!-- 采购 -->
-<div id="panel-purchase" class="panel">
-<div class="export-bar"><button class="btn btn-secondary" onclick="exportTable('tbl-pur-input','采购-当期概况')">导出Excel</button></div>
-<h2 class="section-title">二、采购板块（责任部门：采购部）</h2>
-<div class="dept-tag">▶ 核心关联部门：采购部/质量部/财务部</div>
+      <!-- 生产 -->
+      <div class="panel" id="panel-production">
+        <div class="tag">责任部门：生产部 / 工艺部 | 关联：质量部/设备部</div>
+        <div class="chart-grid">
+          <div class="chart-box"><div class="chart-title">生产成本概况</div>
+            <table class="show-table" id="prod-table-1"><thead><tr><th>指标</th><th>实际值</th><th>目标值</th><th>偏差率</th><th>备注</th></tr></thead><tbody></tbody></table>
+          </div>
+          <div class="chart-box"><div class="chart-title">生产效率与费率</div>
+            <table class="show-table" id="prod-table-2"><thead><tr><th>指标</th><th>实际值</th><th>目标值</th><th>偏差率</th><th>备注</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+        <div class="chart-box chart-full">
+          <div class="chart-title">损耗、质量与专项分析</div>
+          <table class="show-table" id="prod-table-3"><thead><tr><th>指标</th><th>实际值</th><th>目标值</th><th>偏差率</th><th>备注</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="fill-block" id="prod-fill"></div>
+      </div>
 
-<h3 class="sub-title">1. 当期采购概况</h3>
-<table class="metric-table" id="tbl-pur-input">
-<thead><tr><th style="width:30%">指标</th><th style="width:13%">实际值</th><th style="width:13%">目标值</th><th style="width:12%">偏差率</th><th style="width:32%">备注说明</th></tr></thead>
-<tbody>
-<tr><td>采购总金额</td><td><input value="3850" data-type="currency" onchange="calcVar(this)"></td><td><input value="3600" data-type="currency" onchange="calcVar(this)"></td><td class="variance-cell"></td><td>单位：万元</td></tr>
-<tr><td>采购预算达成率</td><td><input value="106.9" data-type="percent" onchange="calcVar(this)"></td><td><input value="100" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>整体到货及时率</td><td><input value="88.5" data-type="percent" onchange="calcVar(this)"></td><td><input value="95" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>来料质检合格率</td><td><input value="97.2" data-type="percent" onchange="calcVar(this)"></td><td><input value="98" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>紧急采购金额占比</td><td><input value="6.8" data-type="percent" onchange="calcVar(this)"></td><td><input value="5" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-</tbody>
-</table>
+      <!-- 物控 -->
+      <div class="panel" id="panel-inventory">
+        <div class="tag">责任部门：物流部 / 仓储部 | 关联：计划部/采购部</div>
+        <div class="chart-grid">
+          <div class="chart-box"><div class="chart-title">物流交付概况</div>
+            <table class="show-table" id="inv-table-1"><thead><tr><th>指标</th><th>实际值</th><th>目标值</th><th>偏差率</th><th>备注</th></tr></thead><tbody></tbody></table>
+          </div>
+          <div class="chart-box"><div class="chart-title">库存结构分析</div>
+            <div class="chart" id="chart-inv-pie"></div>
+          </div>
+        </div>
+        <div class="fill-block" id="inv-fill"></div>
+      </div>
 
-<h3 class="sub-title">🔹 采购结构分析</h3>
-<div class="text-fill">
-<input class="line-input" value="原材料采购占比48%，零部件32%，电子件16%，包材及MRO 4%。本月原材料占比上升2个百分点，主要因铜材、塑胶等大宗商品锁价采购增加。">
-</div>
+      <!-- 销售 -->
+      <div class="panel" id="panel-sales">
+        <div class="tag">责任部门：销售部 / 计划部 | 关联：生产部/财务部</div>
+        <div class="chart-grid">
+          <div class="chart-box"><div class="chart-title">销售业绩概况</div>
+            <table class="show-table" id="sales-table-1"><thead><tr><th>指标</th><th>实际值</th><th>目标值</th><th>偏差率</th><th>备注</th></tr></thead><tbody></tbody></table>
+          </div>
+          <div class="chart-box"><div class="chart-title">预测准确率趋势</div>
+            <div class="chart" id="chart-sales-line"></div>
+          </div>
+        </div>
+        <div class="fill-block" id="sales-fill"></div>
+      </div>
 
-<h3 class="sub-title">2. 采购量价分析</h3>
-<div class="text-fill">
-<b>• 价格分析：</b>核心物料共 <input class="inline-input" value="56"> 种，均价同比上涨 <input class="inline-input" value="18"> 种、下降 <input class="inline-input" value="12"> 种、持平 <input class="inline-input" value="26"> 种，与市场行情偏差超5%的物料清单及原因：<br>
-a. <input class="line-input" value="铜材：均价同比上涨12%，受国际铜价及国内供需紧张影响"><br>
-b. <input class="line-input" value="芯片A：均价同比下降8%，主要供应商产能释放，市场价格回落"><br><br>
-<b>• 年度谈价降本达成：</b>当期降本 <input class="inline-input" value="185"> 万元，年度目标完成率 <input class="inline-input" value="72"> %<br><br>
-<b>• 采购量匹配分析：</b>超量采购物料共 <input class="inline-input" value="7"> 种，涉及金额 <input class="inline-input" value="230"> 万元，原因说明： <input class="line-input" value="需求计划调整滞后，已协同计划部优化预测模型">
-</div>
+      <!-- 跨板块联动 -->
+      <div class="panel" id="panel-cross">
+        <div class="tag">责任部门：供应链管理部 | 全链条协同监控</div>
+        <div class="chart-box chart-full">
+          <div class="chart-title">跨板块协同健康度评分</div>
+          <div class="chart" id="chart-cross-radar" style="height:300px"></div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-box"><div class="chart-title">信息流转时效</div>
+            <table class="show-table" id="cross-table-1"><thead><tr><th>流转节点</th><th>目标时效</th><th>实际时效</th><th>偏差</th><th>瓶颈说明</th></tr></thead><tbody></tbody></table>
+          </div>
+          <div class="chart-box"><div class="chart-title">异常闭环跟踪</div>
+            <table class="show-table" id="cross-table-2"><thead><tr><th>异常类型</th><th>发生次数</th><th>闭环率</th><th>平均处理周期</th><th>责任部门</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+        <div class="fill-block" id="cross-fill"></div>
+      </div>
 
-<h3 class="sub-title">3. 供应商与账期分析</h3>
-<table class="metric-table rank-table" id="tbl-supplier-rank">
-<thead><tr><th>排名</th><th>供应商名称</th><th>交付及时率</th><th>质量合格率</th><th>定级</th></tr></thead>
-<tbody>
-<tr class="rank-1"><td>1</td><td><input value="华东精密"></td><td><input value="99.2%"></td><td><input value="99.5%"></td><td><select><option selected>战略</option><option>核心</option><option>待优化</option><option>待淘汰</option></select></td></tr>
-<tr class="rank-2"><td>2</td><td><input value="南方电子"></td><td><input value="97.8%"></td><td><input value="98.6%"></td><td><select><option>战略</option><option selected>核心</option><option>待优化</option><option>待淘汰</option></select></td></tr>
-<tr class="rank-3"><td>3</td><td><input value="中原化工"></td><td><input value="95.5%"></td><td><input value="97.2%"></td><td><select><option>战略</option><option selected>核心</option><option>待优化</option><option>待淘汰</option></select></td></tr>
-<tr class="rank-last"><td>末3</td><td><input value="西部金属"></td><td><input value="72.3%"></td><td><input value="94.1%"></td><td><select><option>战略</option><option>核心</option><option selected>待优化</option><option>待淘汰</option></select></td></tr>
-<tr class="rank-last"><td>末2</td><td><input value="北方塑胶"></td><td><input value="68.5%"></td><td><input value="91.8%"></td><td><select><option>战略</option><option>核心</option><option>待优化</option><option selected>待淘汰</option></select></td></tr>
-<tr class="rank-last"><td>末1</td><td><input value="远东贸易"></td><td><input value="55.2%"></td><td><input value="89.3%"></td><td><select><option>战略</option><option>核心</option><option>待优化</option><option selected>待淘汰</option></select></td></tr>
-</tbody>
-</table>
-<div class="text-fill">
-<b>• 账期管理：</b>应付账款平均周转天数 <input class="inline-input" value="42"> 天，较目标 <input class="inline-input" value="38"> 天，差异原因： <input class="line-input" value="战略供应商账期协商中，预计下月缩短至40天"><br><br>
-<b>• 供应商变动：</b>本期淘汰不合格供应商 <input class="inline-input" value="1"> 家，新引入战略供应商 <input class="inline-input" value="2"> 家
-</div>
+      <!-- 数据导入 -->
+      <div class="panel" id="panel-import">
+        <div class="tag">批量导入历史数据 / 外部系统对接</div>
+        <div class="chart-box chart-full" style="padding:24px">
+          <div class="upload-zone" id="uploadZone">
+            <div style="font-size:28px;margin-bottom:6px">📤</div>
+            <p style="font-size:13px;font-weight:500">点击上传或拖拽文件至此处</p>
+            <p style="font-size:11px;color:#9ca3af;margin-top:4px">支持 .xlsx / .xls / .csv | 单文件最大 10MB</p>
+          </div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none">
+          <div class="btn-group" style="margin-top:12px;max-width:400px">
+            <button class="btn btn-primary" onclick="downloadTemplate('all')">下载完整模板</button>
+            <button class="btn btn-secondary" onclick="downloadTemplate('rd')">研发模板</button>
+            <button class="btn btn-secondary" onclick="downloadTemplate('purchase')">采购模板</button>
+            <button class="btn btn-secondary" onclick="downloadTemplate('production')">生产模板</button>
+          </div>
+        </div>
+      </div>
 
-<h3 class="sub-title">4. 行情与节降分析</h3>
-<div class="text-fill">
-<b>• 大宗商品行情预判：</b>未来3个月核心物料价格走势预判（上涨/下跌/持平），应对预案：<br>
-a. <input class="line-input" value="铜材：预计上涨5-8%，建议Q2提前锁价30%用量，并启动替代材料验证"><br>
-b. <input class="line-input" value="塑胶：预计持平，产能充足，维持现有采购节奏"><br><br>
-<b>• 当期总降本：</b> <input class="inline-input" value="185"> 万元，各措施贡献占比：集中采购 <input class="inline-input" value="45"> %、替代物料 <input class="inline-input" value="25"> %、谈价 <input class="inline-input" value="22"> %、其他 <input class="inline-input" value="8"> %
-</div>
-</div>
+      <!-- 模板配置 -->
+      <div class="panel" id="panel-template">
+        <div class="tag">配置报告周期、指标权重、预警阈值</div>
+        <div class="chart-box chart-full" style="padding:20px">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">报告周期</label><select class="form-input"><option>月度</option><option>季度</option><option>年度</option></select></div>
+            <div class="form-group"><label class="form-label">数据年份</label><input class="form-input" value="2026"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">毛利率预警阈值(%)</label><input class="form-input" value="18"></div>
+            <div class="form-group"><label class="form-label">周转天数预警阈值(天)</label><input class="form-input" value="45"></div>
+          </div>
+          <div class="form-group"><label class="form-label">报告标题后缀</label><input class="form-input" value="（2026年5月月度经营分析）"></div>
+          <div class="btn-group" style="max-width:300px"><button class="btn btn-primary" onclick="alert('配置已保存')">保存配置</button><button class="btn btn-secondary">重置默认</button></div>
+        </div>
+      </div>
 
-<!-- 生产 -->
-<div id="panel-production" class="panel">
-<div class="export-bar"><button class="btn btn-secondary" onclick="exportTable('tbl-prod-cost','生产-成本概况')">导出Excel</button></div>
-<h2 class="section-title">三、生产板块（责任部门：生产部、工艺部）</h2>
-<div class="dept-tag">▶ 核心关联部门：生产部/工艺部/质量部/设备部</div>
+      <!-- 模拟分析 -->
+      <div class="panel" id="panel-sim">
+        <div class="tag">假设推演：价格/产能/需求变动对经营指标的影响</div>
+        <div class="chart-grid">
+          <div class="chart-box" style="padding:16px">
+            <div class="chart-title">模拟参数设置</div>
+            <div class="form-group"><label class="form-label">原材料价格变动(%)</label><input class="form-input" type="number" value="0" id="sim-price"></div>
+            <div class="form-group"><label class="form-label">产能利用率调整(%)</label><input class="form-input" type="number" value="0" id="sim-cap"></div>
+            <div class="form-group"><label class="form-label">需求波动(%)</label><input class="form-input" type="number" value="0" id="sim-demand"></div>
+            <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="runSim()">运行模拟</button>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">模拟结果</div>
+            <div class="chart" id="chart-sim"></div>
+          </div>
+        </div>
+      </div>
 
-<h3 class="sub-title">1. 当期生产成本概况</h3>
-<table class="metric-table" id="tbl-prod-cost">
-<thead><tr><th style="width:30%">指标</th><th style="width:13%">实际值</th><th style="width:13%">目标值</th><th style="width:12%">偏差率</th><th style="width:32%">备注说明</th></tr></thead>
-<tbody>
-<tr><td>总生产成本</td><td><input value="4520" data-type="currency" onchange="calcVar(this)"></td><td><input value="4400" data-type="currency" onchange="calcVar(this)"></td><td class="variance-cell"></td><td>单位：万元</td></tr>
-<tr><td>单位产品生产成本</td><td><input value="156" data-type="number" onchange="calcVar(this)"></td><td><input value="150" data-type="number" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>生产成本预算达成率</td><td><input value="102.7" data-type="percent" onchange="calcVar(this)"></td><td><input value="100" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>直接材料占比</td><td><input value="62.5" data-type="percent" onchange="calcVar(this)"></td><td><input value="60" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>直接人工占比</td><td><input value="18.3" data-type="percent" onchange="calcVar(this)"></td><td><input value="20" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>制造费用占比</td><td><input value="19.2" data-type="percent" onchange="calcVar(this)"></td><td><input value="20" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-</tbody>
-</table>
-
-<h3 class="sub-title">2. 生产效率与费率指标</h3>
-<table class="metric-table" id="tbl-prod-eff">
-<thead><tr><th style="width:30%">指标</th><th style="width:13%">实际值</th><th style="width:13%">目标值</th><th style="width:12%">偏差率</th><th style="width:32%">备注说明</th></tr></thead>
-<tbody>
-<tr><td>人均产出</td><td><input value="28.5" data-type="number" onchange="calcVar(this)"></td><td><input value="26" data-type="number" onchange="calcVar(this)"></td><td class="variance-cell"></td><td>单位：万元/人</td></tr>
-<tr><td>设备稼动率</td><td><input value="82.3" data-type="percent" onchange="calcVar(this)"></td><td><input value="85" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>生产线平衡率</td><td><input value="76.8" data-type="percent" onchange="calcVar(this)"></td><td><input value="80" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>订单平均生产周期</td><td><input value="6.2" data-type="number" onchange="calcVar(this)"></td><td><input value="6" data-type="number" onchange="calcVar(this)"></td><td class="variance-cell"></td><td>单位：天</td></tr>
-<tr><td>制造费用率</td><td><input value="9.8" data-type="percent" onchange="calcVar(this)"></td><td><input value="10" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>单位能耗成本</td><td><input value="4.8" data-type="number" onchange="calcVar(this)"></td><td><input value="5" data-type="number" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-</tbody>
-</table>
-
-<h3 class="sub-title">3. 损耗、质量与专项分析</h3>
-<table class="metric-table" id="tbl-prod-quality">
-<thead><tr><th style="width:30%">指标</th><th style="width:13%">实际值</th><th style="width:13%">目标值</th><th style="width:12%">偏差率</th><th style="width:32%">备注说明</th></tr></thead>
-<tbody>
-<tr><td>生产物料整体损耗率</td><td><input value="3.2" data-type="percent" onchange="calcVar(this)"></td><td><input value="3" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>成品良率</td><td><input value="96.5" data-type="percent" onchange="calcVar(this)"></td><td><input value="97" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>返工率</td><td><input value="2.1" data-type="percent" onchange="calcVar(this)"></td><td><input value="2" data-type="percent" onchange="calcVar(this)"></td><td class="variance-cell"></td><td></td></tr>
-<tr><td>不良品报废金额</td><td><input value="28" data-type="currency" onchange="calcVar(this)"></td><td><input value="20" data-type="currency" onchange="calcVar(this)"></td><td class="variance-cell"></td><td>单位：万元</td></tr>
-</tbody>
-</table>
-<div class="text-fill">
-<b>• 核心问题分析：</b>损耗/质量超标TOP3工序及根因：<br>
-a. <input class="line-input" value="SMT贴片工序：来料锡膏活性不足，导致虚焊率上升0.3%，已切换至合格供应商"><br>
-b. <input class="line-input" value="组装线：工装夹具磨损导致定位偏差，已安排更换并建立点检机制"><br><br>
-<b>• 专项改善成果：</b>当期精益生产/工艺优化项目共 <input class="inline-input" value="4"> 个，实现降本 <input class="inline-input" value="68"> 万元，预期收益达成率 <input class="inline-input" value="92"> %
-</div>
-</div>
-
-<!-- 数据导入 -->
-<div id="panel-import" class="panel">
-<div class="alert">支持导入 .xlsx / .xls / .csv 格式文件。系统自动识别「指标/实际值/目标值/备注」四列，金额统一为万元，时间统一为天，比率统一为%。</div>
-<div class="upload-zone" id="uploadZone">
-<div style="font-size:32px;margin-bottom:6px">📤</div>
-<p style="font-size:13px;font-weight:500">点击上传或拖拽文件至此处</p>
-<p style="font-size:11px;color:#9ca3af;margin-top:4px">支持 Excel、CSV | 单文件最大 10MB | 建议先下载标准模板</p>
-</div>
-<input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none">
-<div class="export-bar" style="margin-top:12px;justify-content:flex-start">
-<button class="btn btn-primary" onclick="downloadFullTemplate()">下载完整导入模板</button>
-<button class="btn btn-secondary" onclick="downloadTemplate('rd')">研发模板</button>
-<button class="btn btn-secondary" onclick="downloadTemplate('purchase')">采购模板</button>
-<button class="btn btn-secondary" onclick="downloadTemplate('production')">生产模板</button>
-</div>
-<div id="importPreview" class="hidden" style="margin-top:12px">
-<div class="chart-box">
-<div style="font-weight:600;margin-bottom:8px">字段映射配置</div>
-<div id="fieldMap"></div>
-<div class="export-bar" style="margin-top:10px">
-<button class="btn btn-primary" onclick="confirmImport()">确认导入</button>
-<button class="btn btn-secondary" onclick="cancelImport()">取消</button>
-</div>
-</div>
-<div class="chart-box">
-<div style="font-weight:600;margin-bottom:8px">数据预览（前20行）</div>
-<div id="previewTable"></div>
-</div>
-</div>
-</div>
-
+    </div>
+  </div>
 </div>
 
 <script>
+// ===== 数据定义 =====
+const DATA={
+  rd:[
+    {n:'在研项目总数',a:18,t:20,type:'int'},
+    {n:'当期转量产项目数',a:3,t:4,type:'int'},
+    {n:'研发周期达标率',a:85.7,t:90,type:'pct'},
+    {n:'研发总投入金额(万元)',a:1250,t:1200,type:'num'},
+    {n:'研发物料消耗占总采购额比例',a:8.2,t:8,type:'pct'},
+  ],
+  rdLink:[
+    {n:'新产品物料复用率',a:62,t:70,type:'pct'},
+    {n:'新供应商平均导入周期(天)',a:45,t:35,type:'int'},
+    {n:'新产品小批量试产良率',a:91.5,t:95,type:'pct'},
+    {n:'试产问题闭环平均周期(天)',a:8,t:7,type:'int'},
+  ],
+  pur:[
+    {n:'采购总金额(万元)',a:3850,t:3600,type:'num'},
+    {n:'采购预算达成率',a:106.9,t:100,type:'pct'},
+    {n:'整体到货及时率',a:88.5,t:95,type:'pct'},
+    {n:'来料质检合格率',a:97.2,t:98,type:'pct'},
+    {n:'紧急采购金额占比',a:6.8,t:5,type:'pct'},
+  ],
+  purRank:[
+    {r:1,n:'华东精密',d:'99.2%',q:'99.5%',lv:'战略',cls:'rank-1'},
+    {r:2,n:'南方电子',d:'97.8%',q:'98.6%',lv:'核心',cls:'rank-2'},
+    {r:3,n:'中原化工',d:'95.5%',q:'97.2%',lv:'核心',cls:'rank-3'},
+    {r:'末3',n:'西部金属',d:'72.3%',q:'94.1%',lv:'待优化',cls:'rank-last'},
+    {r:'末2',n:'北方塑胶',d:'68.5%',q:'91.8%',lv:'待淘汰',cls:'rank-last'},
+    {r:'末1',n:'远东贸易',d:'55.2%',q:'89.3%',lv:'待淘汰',cls:'rank-last'},
+  ],
+  prod1:[
+    {n:'总生产成本(万元)',a:4520,t:4400,type:'num'},
+    {n:'单位产品生产成本',a:156,t:150,type:'num'},
+    {n:'生产成本预算达成率',a:102.7,t:100,type:'pct'},
+    {n:'直接材料占比',a:62.5,t:60,type:'pct'},
+    {n:'直接人工占比',a:18.3,t:20,type:'pct'},
+    {n:'制造费用占比',a:19.2,t:20,type:'pct'},
+  ],
+  prod2:[
+    {n:'人均产出(万元/人)',a:28.5,t:26,type:'num'},
+    {n:'设备稼动率',a:82.3,t:85,type:'pct'},
+    {n:'生产线平衡率',a:76.8,t:80,type:'pct'},
+    {n:'订单平均生产周期(天)',a:6.2,t:6,type:'num'},
+    {n:'制造费用率',a:9.8,t:10,type:'pct'},
+    {n:'单位能耗成本',a:4.8,t:5,type:'num'},
+  ],
+  prod3:[
+    {n:'生产物料整体损耗率',a:3.2,t:3,type:'pct'},
+    {n:'成品良率',a:96.5,t:97,type:'pct'},
+    {n:'返工率',a:2.1,t:2,type:'pct'},
+    {n:'不良品报废金额(万元)',a:28,t:20,type:'num'},
+  ],
+  inv1:[
+    {n:'订单交付及时率',a:91.2,t:95,type:'pct'},
+    {n:'库存周转天数(原材料)',a:28,t:25,type:'int'},
+    {n:'库存周转天数(在制品)',a:12,t:10,type:'int'},
+    {n:'库存周转天数(成品)',a:18,t:15,type:'int'},
+    {n:'仓储面积利用率',a:78.5,t:85,type:'pct'},
+  ],
+  sales1:[
+    {n:'营收总额(万元)',a:8650,t:8200,type:'num'},
+    {n:'销量达成率',a:105.5,t:100,type:'pct'},
+    {n:'预测准确率',a:87.2,t:90,type:'pct'},
+    {n:'客户订单流失率',a:3.8,t:3,type:'pct'},
+    {n:'应收账款周转天数',a:35,t:32,type:'int'},
+  ],
+  cross1:[
+    {n:'客户需求→生产计划',a:'2h',t:'4h',d:'-2h',note:'系统直连'},
+    {n:'生产计划→采购下单',a:'1d',t:'2d',d:'-1d',note:'MRP自动运算'},
+    {n:'采购下单→到货入库',a:'8d',t:'7d',d:'+1d',note:'供应商产能紧张'},
+    {n:'入库→生产领料',a:'2h',t:'4h',d:'-2h',note:'WMS自动分配'},
+    {n:'生产完工→发货出库',a:'1d',t:'1d',d:'0',note:'准时'},
+  ],
+  cross2:[
+    {n:'需求变更',a:12,r:'92%',c:'3d',dept:'销售/计划'},
+    {n:'来料异常',a:5,r:'100%',c:'2d',dept:'采购/质量'},
+    {n:'设备故障',a:3,r:'100%',c:'1d',dept:'生产/设备'},
+    {n:'订单插单',a:8,r:'88%',c:'4d',dept:'销售/生产'},
+  ],
+};
+
+// ===== 辅助函数 =====
+function fmt(n,t){if(t==='pct')return n+'%';if(t==='num'||t==='int')return n.toLocaleString();return n;}
+function calc(a,t,type){
+  if(!t||t==0)return {v:'-',cls:'variance-neutral'};
+  let v=((a-t)/t*100).toFixed(1);
+  let vn=parseFloat(v);
+  let good=false;
+  if(['int','pct'].includes(type)){
+    const name=arguments.callee.caller?arguments.callee.caller.name:'';
+    // 成本类越低越好，效率类越高越好
+    good = vn<0; // 默认成本/时间类
+  }
+  let cls='variance-neutral'; if(Math.abs(vn)>3)cls=good?'variance-good':'variance-bad';
+  return {v:(vn>0?'+':'')+v+'%',cls:cls};
+}
+function calcVariance(a,t,type,name){
+  if(!t||t==0)return {v:'-',cls:'variance-neutral'};
+  let v=((a-t)/t*100).toFixed(1); let vn=parseFloat(v);
+  let isCost=!name||name.includes('成本')||name.includes('金额')||name.includes('损耗')||name.includes('周期')||name.includes('天数')||name.includes('报废')||name.includes('占比')||name.includes('率')&&!name.includes('良率')&&!name.includes('产出')&&!name.includes('稼动')&&!name.includes('平衡')&&!name.includes('及时')&&!name.includes('合格');
+  let good=isCost?(vn<0):(vn>0);
+  if(name.includes('偏差')||name.includes('流失'))good=vn<0;
+  let cls='variance-neutral'; if(Math.abs(vn)>3)cls=good?'variance-good':'variance-bad';
+  return {v:(vn>0?'+':'')+v+'%',cls:cls};
+}
+
+// ===== 渲染表格 =====
+function renderMetricTable(tbodyId,data){
+  const tb=document.querySelector(tbodyId);
+  if(!tb)return;
+  tb.innerHTML=data.map((x,i)=>{
+    let v=calcVariance(x.a,x.t,x.type,x.n);
+    return `<tr><td>${x.n}</td><td>${fmt(x.a,x.type)}</td><td>${fmt(x.t,x.type)}</td><td class="${v.cls}">${v.v}</td><td>${x.note||''}</td></tr>`;
+  }).join('');
+}
+function renderEditableMetricList(containerId,data,prefix){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  el.innerHTML=data.map((x,i)=>`
+    <div class="metric-item">
+      <span class="metric-name" title="${x.n}">${x.n}</span>
+      <input class="metric-input" value="${x.a}" id="${prefix}-${i}-a" onchange="updateData('${prefix}',${i},'a',this.value)">
+      <input class="metric-input" value="${x.t}" id="${prefix}-${i}-t" onchange="updateData('${prefix}',${i},'t',this.value)">
+    </div>
+  `).join('');
+}
+
+// ===== 更新数据 =====
+function updateData(prefix,idx,field,val){
+  const map={rd:DATA.rd,rdLink:DATA.rdLink,pur:DATA.pur,prod1:DATA.prod1,prod2:DATA.prod2,prod3:DATA.prod3,inv1:DATA.inv1,sales1:DATA.sales1};
+  const arr=map[prefix]; if(!arr)return;
+  let v=parseFloat(val)||0; if(field==='a')arr[idx].a=v; else arr[idx].t=v;
+  refreshAll();
+}
+function refreshAll(){
+  renderMetricTable('#rd-table-1 tbody',DATA.rd);
+  renderMetricTable('#rd-table-2 tbody',DATA.rdLink);
+  renderMetricTable('#pur-table-1 tbody',DATA.pur);
+  renderMetricTable('#prod-table-1 tbody',DATA.prod1);
+  renderMetricTable('#prod-table-2 tbody',DATA.prod2);
+  renderMetricTable('#prod-table-3 tbody',DATA.prod3);
+  renderMetricTable('#inv-table-1 tbody',DATA.inv1);
+  renderMetricTable('#sales-table-1 tbody',DATA.sales1);
+  // 跨板块
+  const c1=document.querySelector('#cross-table-1 tbody');
+  if(c1)c1.innerHTML=DATA.cross1.map(x=>`<tr><td>${x.n}</td><td>${x.t}</td><td>${x.a}</td><td class="${x.d.startsWith('+')?'variance-bad':x.d.startsWith('-')?'variance-good':'variance-neutral'}">${x.d}</td><td>${x.note}</td></tr>`).join('');
+  const c2=document.querySelector('#cross-table-2 tbody');
+  if(c2)c2.innerHTML=DATA.cross2.map(x=>`<tr><td>${x.n}</td><td>${x.a}</td><td>${x.r}</td><td>${x.c}</td><td>${x.dept}</td></tr>`).join('');
+  // 供应商
+  const pr=document.querySelector('#pur-table-2 tbody');
+  if(pr)pr.innerHTML=DATA.purRank.map(x=>`<tr class="${x.cls}"><td>${x.r}</td><td>${x.n}</td><td>${x.d}</td><td>${x.q}</td><td>${x.lv}</td></tr>`).join('');
+}
+
+// ===== 左侧边栏渲染 =====
+function renderSidebar(panel){
+  const title=document.getElementById('sidebarTitle');
+  const body=document.getElementById('sidebarBody');
+  const map={
+    overview:()=>{title.textContent='总览数据调整';body.innerHTML=`
+      <div class="form-group"><label class="form-label">供应链总成本占营收比(%)</label><input class="form-input" value="68.5" id="kpi1"></div>
+      <div class="form-group"><label class="form-label">整体毛利率(%)</label><input class="form-input" value="22.3" id="kpi2"></div>
+      <div class="form-group"><label class="form-label">客户订单满足率(%)</label><input class="form-input" value="94.2" id="kpi3"></div>
+      <div class="form-group"><label class="form-label">全链路周转天数</label><input class="form-input" value="42" id="kpi4"></div>
+      <div class="form-group"><label class="form-label">需求预测偏差率(%)</label><input class="form-input" value="12.8" id="kpi5"></div>
+      <div class="form-group"><label class="form-label">营收总额(万元)</label><input class="form-input" value="8650" id="kpi6"></div>
+      <div class="btn-group"><button class="btn btn-primary" onclick="updateKPIs()">更新总览</button><button class="btn btn-secondary" onclick="exportCurrent()">导出</button></div>
+    `;},
+    rd:()=>{title.textContent='研发板块数据录入';body.innerHTML=`
+      <div style="font-weight:600;margin-bottom:8px;font-size:12px">1. 当期研发投入概况</div>
+      <div class="metric-list" id="rd-list-1"></div>
+      <div style="font-weight:600;margin:10px 0 8px;font-size:12px">2. 研发-供应链联动</div>
+      <div class="metric-list" id="rd-list-2"></div>
+      <div style="font-weight:600;margin:10px 0 8px;font-size:12px">3. 成本前置管控</div>
+      <div class="form-group"><label class="form-label">设计降本年降本金额(万元)</label><input class="form-input" value="320" id="rd-cost"></div>
+      <div class="form-group"><label class="form-label">年度目标完成率(%)</label><input class="form-input" value="85" id="rd-rate"></div>
+      <div class="form-group"><label class="form-label">核心降本措施</label><textarea class="textarea-edit" id="rd-measure">a. 结构件材料替代：铝合金→高强度工程塑料
+b. 板级器件归一化减少SKU 30%</textarea></div>
+      <div class="btn-group"><button class="btn btn-primary" onclick="saveText('rd')">保存</button><button class="btn btn-secondary" onclick="exportCurrent()">导出</button></div>
+    `;
+      renderEditableMetricList('rd-list-1',DATA.rd,'rd');
+      renderEditableMetricList('rd-list-2',DATA.rdLink,'rdLink');
+    },
+    purchase:()=>{title.textContent='采购板块数据录入';body.innerHTML=`
+      <div style="font-weight:600;margin-bottom:8px;font-size:12px">1. 当期采购概况</div>
+      <div class="metric-list" id="pur-list-1"></div>
+      <div style="font-weight:600;margin:10px 0 8px;font-size:12px">2. 采购量价分析</div>
+      <div class="form-group"><label class="form-label">核心物料种类数</label><input class="form-input" value="56" id="pur-mat"></div>
+      <div class="form-group"><label class="form-label">年度谈价降本(万元)</label><input class="form-input" value="185" id="pur-save"></div>
+      <div style="font-weight:600;margin:10px 0 8px;font-size:12px">3. 供应商排名</div>
+      <div class="form-group"><label class="form-label">Top1 名称</label><input class="form-input" value="华东精密" id="pur-s1"></div>
+      <div class="form-group"><label class="form-label">末1 名称</label><input class="form-input" value="远东贸易" id="pur-slast"></div>
+      <div style="font-weight:600;margin:10px 0 8px;font-size:12px">4. 行情预判</div>
+      <textarea class="textarea-edit" id="pur-forecast">a. 铜材：预计上涨5-8%，建议Q2提前锁价30%
+b. 塑胶：预计持平，产能充足</textarea>
+      <div class="btn-group"><button class="btn btn-primary" onclick="saveText('purchase')">保存</button><button class="btn btn-secondary" onclick="exportCurrent()">导出</button></div>
+    `;
+      renderEditableMetricList('pur-list-1',DATA.pur,'pur');
+    },
+    production:()=>{title.textContent='生产板块数据录入';body.innerHTML=`
+      <div style="font-weight:600;margin-bottom:8px;font-size:12px">1. 生产成本概况</div>
+      <div class="metric-list" id="prod-list-1"></div>
+      <div style="font-weight:600;margin:10px 0 8px;font-size:12px">2. 生产效率</div>
+      <div class="metric-list" id="prod-list-2"></div>
+      <div style="font-weight:600;margin:10px 0 8px;font-size:12px">3. 损耗质量</div>
+      <div class="metric-list" id="prod-list-3"></div>
+      <div style="font-weight:600;margin:10px 0 8px;font-size:12px">4. 专项分析</div>
+      <textarea class="textarea-edit" id="prod-issues">a. SMT贴片工序：来料锡膏活性不足，已切换供应商
+b. 组装线：工装夹具磨损，已安排更换</textarea>
+      <div class="btn-group"><button class="btn btn-primary" onclick="saveText('production')">保存</button><button class="btn btn-secondary" onclick="exportCurrent()">导出</button></div>
+    `;
+      renderEditableMetricList('prod-list-1',DATA.prod1,'prod1');
+      renderEditableMetricList('prod-list-2',DATA.prod2,'prod2');
+      renderEditableMetricList('prod-list-3',DATA.prod3,'prod3');
+    },
+    inventory:()=>{title.textContent='物控板块数据录入';body.innerHTML=`
+      <div class="metric-list" id="inv-list-1"></div>
+      <div class="form-group" style="margin-top:10px"><label class="form-label">呆滞物料金额(万元)</label><input class="form-input" value="120" id="inv-dead"></div>
+      <div class="btn-group"><button class="btn btn-primary" onclick="updateData('inv',0,'a',document.getElementById('inv-dead').value)">保存</button><button class="btn btn-secondary" onclick="exportCurrent()">导出</button></div>
+    `; renderEditableMetricList('inv-list-1',DATA.inv1,'inv1');},
+    sales:()=>{title.textContent='销售板块数据录入';body.innerHTML=`
+      <div class="metric-list" id="sales-list-1"></div>
+      <div class="form-group" style="margin-top:10px"><label class="form-label">滞销成品金额(万元)</label><input class="form-input" value="85" id="sales-stale"></div>
+      <div class="btn-group"><button class="btn btn-primary" onclick="alert('已保存')">保存</button><button class="btn btn-secondary" onclick="exportCurrent()">导出</button></div>
+    `; renderEditableMetricList('sales-list-1',DATA.sales1,'sales1');},
+    cross:()=>{title.textContent='跨板块协同数据';body.innerHTML=`
+      <div style="font-weight:600;margin-bottom:8px;font-size:12px">信息流转时效</div>
+      <div class="form-group"><label class="form-label">客户需求→生产计划(小时)</label><input class="form-input" value="2" id="cross-t1"></div>
+      <div class="form-group"><label class="form-label">生产计划→采购下单(天)</label><input class="form-input" value="1" id="cross-t2"></div>
+      <div class="form-group"><label class="form-label">采购下单→到货入库(天)</label><input class="form-input" value="8" id="cross-t3"></div>
+      <div class="btn-group"><button class="btn btn-primary" onclick="alert('已保存')">保存</button></div>
+    `;},
+    import:()=>{title.textContent='数据导入';body.innerHTML=`
+      <div class="upload-zone" id="sideUpload" style="margin-bottom:10px"><div style="font-size:24px">📤</div><p style="font-size:12px">点击上传Excel/CSV</p></div>
+      <div class="btn-group"><button class="btn btn-primary" onclick="downloadTemplate('all')">下载模板</button><button class="btn btn-secondary" onclick="alert('请先在右侧选择文件')">导入</button></div>
+    `;
+      setTimeout(()=>{const z=document.getElementById('sideUpload');if(z)z.onclick=()=>document.getElementById('fileInput').click();},0);
+    },
+    template:()=>{title.textContent='模板配置';body.innerHTML=`
+      <div class="form-group"><label class="form-label">报告周期</label><select class="form-input"><option>月度</option><option>季度</option></select></div>
+      <div class="form-group"><label class="form-label">毛利率预警(%)</label><input class="form-input" value="18"></div>
+      <div class="form-group"><label class="form-label">周转天数预警</label><input class="form-input" value="45"></div>
+      <div class="btn-group"><button class="btn btn-primary" onclick="alert('配置已保存')">保存</button></div>
+    `;},
+    sim:()=>{title.textContent='模拟参数';body.innerHTML=`
+      <div class="form-group"><label class="form-label">原材料价格变动(%)</label><input class="form-input" type="number" value="0" id="side-sim-price"></div>
+      <div class="form-group"><label class="form-label">产能利用率调整(%)</label><input class="form-input" type="number" value="0" id="side-sim-cap"></div>
+      <div class="form-group"><label class="form-label">需求波动(%)</label><input class="form-input" type="number" value="0" id="side-sim-demand"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="runSim()">运行模拟</button>
+    `;},
+  };
+  (map[panel]||map.overview)();
+}
+
+// ===== 图表（懒加载） =====
+let charts={};
+function initCharts(panel){
+  if(panel==='overview'){
+    if(!charts.pie)charts.pie=echarts.init(document.getElementById('chart-pie'));
+    charts.pie.setOption({tooltip:{trigger:'item'},series:[{type:'pie',radius:['40%','70%'],data:[{value:1250,name:'研发'},{value:3850,name:'采购'},{value:4520,name:'生产'},{value:310,name:'物流'}]}]});
+    if(!charts.line)charts.line=echarts.init(document.getElementById('chart-line'));
+    charts.line.setOption({tooltip:{trigger:'axis'},xAxis:{type:'category',data:['1月','2月','3月','4月','5月','6月']},yAxis:[{type:'value',name:'金额'},{type:'value',name:'比率%'}],series:[{name:'营收',type:'bar',data:[7200,6800,7500,8100,8650,8900]},{name:'毛利率',type:'line',yAxisIndex:1,data:[27.8,29.4,32,33.3,31.5,31.5]}]});
+    if(!charts.radar)charts.radar=echarts.init(document.getElementById('chart-radar'));
+    charts.radar.setOption({radar:{indicator:[{name:'研发-供应链联动'},{name:'采购-质量协同'},{name:'生产-计划匹配'},{name:'产销预测偏差'},{name:'库存资金占用'},{name:'交付客户满意'}]},series:[{type:'radar',data:[{value:[78,82,75,68,72,88],name:'当前周期'}]}]});
+  }
+  if(panel==='inventory'){
+    if(!charts.invPie)charts.invPie=echarts.init(document.getElementById('chart-inv-pie'));
+    charts.invPie.setOption({series:[{type:'pie',data:[{value:420,name:'原材料'},{value:180,name:'在制品'},{value:260,name:'成品'}]}]});
+  }
+  if(panel==='sales'){
+    if(!charts.salesLine)charts.salesLine=echarts.init(document.getElementById('chart-sales-line'));
+    charts.salesLine.setOption({xAxis:{type:'category',data:['1月','2月','3月','4月','5月','6月']},yAxis:{type:'value'},series:[{type:'line',data:[82,85,88,87,89,87]}]});
+  }
+  if(panel==='cross'){
+    if(!charts.crossRadar)charts.crossRadar=echarts.init(document.getElementById('chart-cross-radar'));
+    charts.crossRadar.setOption({radar:{indicator:[{name:'研发-供应链联动'},{name:'采购-质量协同'},{name:'生产-计划匹配'},{name:'产销预测偏差'},{name:'库存资金占用'},{name:'交付客户满意'}]},series:[{type:'radar',data:[{value:[78,82,75,68,72,88],name:'当前周期'},{value:[85,88,82,75,78,90],name:'目标值'}]}]});
+  }
+  if(panel==='sim'){
+    if(!charts.sim)charts.sim=echarts.init(document.getElementById('chart-sim'));
+    charts.sim.setOption({xAxis:{type:'category',data:['当前','模拟后']},yAxis:{type:'value'},series:[{type:'bar',data:[22.3,20.1],name:'毛利率%'},{type:'bar',data:[68.5,72.4],name:'成本占比%'}]});
+  }
+}
+
+// ===== 交互 =====
+let currentPanel='overview';
 function switchPanel(id){
+  currentPanel=id;
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');
-  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  event.target.classList.add('active');
-  if(id==='overview') setTimeout(initOverview,50);
+  document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.nav-item[data-panel="${id}"]`).classList.add('active');
+  renderSidebar(id);
+  setTimeout(()=>initCharts(id),30);
 }
 
-function calcVar(input){
-  const row=input.closest('tr');
-  const aVal=row.cells[1].querySelector('input').value.replace(/,/g,'');
-  const tVal=row.cells[2].querySelector('input').value.replace(/,/g,'');
-  const a=parseFloat(aVal)||0;
-  const t=parseFloat(tVal)||0;
-  const cell=row.cells[3];
-  if(t===0){cell.textContent='-';cell.className='variance-cell variance-neutral';return;}
-  const v=((a-t)/t*100).toFixed(1);
-  const vNum=parseFloat(v);
-  const tblId=row.closest('table').id;
-  let isGood=vNum<0;
-  if(['tbl-rd-input','tbl-rd-link','tbl-prod-eff'].includes(tblId)) isGood=vNum>0;
-  if(tblId==='tbl-prod-quality') isGood=vNum<0;
-  cell.textContent=(vNum>0?'+':'')+v+'%';
-  if(Math.abs(vNum)<=3){cell.className='variance-cell variance-neutral';}
-  else if(isGood){cell.className='variance-cell variance-good';}
-  else{cell.className='variance-cell variance-bad';}
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
 }
 
-function initOverview(){
-  const chart=echarts.init(document.getElementById('chart-overview'));
-  chart.setOption({
-    tooltip:{trigger:'axis'},
-    legend:{bottom:0},
-    xAxis:{type:'category',data:['1月','2月','3月','4月','5月','6月']},
-    yAxis:[{type:'value',name:'金额(万元)'},{type:'value',name:'比率(%)'}],
-    series:[
-      {name:'营收',type:'bar',data:[7200,6800,7500,8100,8650,8900],itemStyle:{color:'#1e3a8a'}},
-      {name:'供应链总成本',type:'bar',data:[5200,4800,5100,5400,5930,6100],itemStyle:{color:'#dc2626'}},
-      {name:'毛利率',type:'line',yAxisIndex:1,data:[27.8,29.4,32.0,33.3,31.5,31.5],lineStyle:{color:'#16a34a',width:3}}
-    ]
+function focusEdit(id){
+  const el=document.getElementById(id); if(el){el.focus();el.select();}
+}
+function updateKPIs(){
+  const ids=['kpi1','kpi2','kpi3','kpi4','kpi5','kpi6'];
+  const labels=['供应链总成本占营收比','整体毛利率','客户订单满足率','全链路周转天数','需求预测偏差率','营收总额'];
+  ids.forEach((id,i)=>{
+    const v=document.getElementById(id)?.value||'0';
+    document.getElementById('show-'+id).textContent=v+(i<4?'%':i===4?'%':'万');
   });
+  alert('总览数据已更新');
+}
+function saveText(type){
+  const map={
+    rd:()=>{const c=document.getElementById('rd-cost')?.value||320,r=document.getElementById('rd-rate')?.value||85,m=document.getElementById('rd-measure')?.value||'';
+      document.getElementById('rd-fill').innerHTML=`<b>• 设计降本达成：</b>当期研发阶段预计年降本金额 ${c} 万元，年度目标完成率 ${r} %，核心降本措施说明：<br>${m.replace(/\n/g,'<br>')}`;},
+    purchase:()=>{const m=document.getElementById('pur-mat')?.value||56,s=document.getElementById('pur-save')?.value||185,f=document.getElementById('pur-forecast')?.value||'';
+      document.getElementById('pur-fill-1').innerHTML=`<b>• 采购结构分析：</b>原材料采购占比48%，零部件32%，电子件16%，包材及MRO 4%。<br><b>• 价格分析：</b>核心物料共 ${m} 种...<br><b>• 年度谈价降本达成：</b>当期降本 ${s} 万元...`;
+      document.getElementById('pur-fill-2').innerHTML=`<b>• 大宗商品行情预判：</b><br>${f.replace(/\n/g,'<br>')}`;},
+    production:()=>{const t=document.getElementById('prod-issues')?.value||'';
+      document.getElementById('prod-fill').innerHTML=`<b>• 核心问题分析：</b><br>${t.replace(/\n/g,'<br>')}<br><br><b>• 专项改善成果：</b>当期精益生产项目共4个，实现降本68万元`;},
+  };
+  (map[type]||map.rd)();
+  alert('已保存');
 }
 
-function exportTable(tableId,sheetName){
-  const tbl=document.getElementById(tableId);
-  if(!tbl){alert('未找到表格');return;}
-  const headers=[]; tbl.querySelectorAll('thead th').forEach(th=>headers.push(th.textContent.trim()));
-  const rows=[]; tbl.querySelectorAll('tbody tr').forEach(tr=>{
-    const row=[]; tr.querySelectorAll('td').forEach(td=>{
-      const inp=td.querySelector('input,select');
-      row.push(inp?(inp.tagName==='SELECT'?inp.value:inp.value):td.textContent.trim());
-    }); rows.push(row);
-  });
-  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
-  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,sheetName);
-  XLSX.writeFile(wb,'供应链经营报告_'+sheetName+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+// ===== 导出 =====
+function exportCurrent(){
+  const panel=currentPanel;
+  let data=[],name='';
+  if(panel==='rd'){name='研发板块';data=DATA.rd.concat(DATA.rdLink);}
+  else if(panel==='purchase'){name='采购板块';data=DATA.pur;}
+  else if(panel==='production'){name='生产板块';data=DATA.prod1.concat(DATA.prod2).concat(DATA.prod3);}
+  else if(panel==='inventory'){name='物控板块';data=DATA.inv1;}
+  else if(panel==='sales'){name='销售板块';data=DATA.sales1;}
+  else {alert('当前页无可导出表格');return;}
+  const ws=XLSX.utils.aoa_to_sheet([['指标','实际值','目标值']].concat(data.map(x=>[x.n,x.a,x.t])));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,name);
+  XLSX.writeFile(wb,'供应链经营报告_'+name+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
+// ===== 导入 =====
 document.getElementById('uploadZone').addEventListener('click',()=>document.getElementById('fileInput').click());
-['dragenter','dragover'].forEach(e=>document.getElementById('uploadZone').addEventListener(e,ev=>{
-  ev.preventDefault();
-  document.getElementById('uploadZone').style.borderColor='#3b82f6';
-  document.getElementById('uploadZone').style.background='#eff6ff';
-}));
-['dragleave','drop'].forEach(e=>document.getElementById('uploadZone').addEventListener(e,ev=>{
-  ev.preventDefault();
-  document.getElementById('uploadZone').style.borderColor='#d1d5db';
-  document.getElementById('uploadZone').style.background='#fafafa';
-}));
-document.getElementById('fileInput').addEventListener('change',handleFile);
-
-let previewData=[],previewHeaders=[];
-function handleFile(e){
-  const f=e.target.files[0]; if(!f)return;
+document.getElementById('fileInput').addEventListener('change',function(e){
+  const f=e.target.files[0];if(!f)return;
   const r=new FileReader();
   r.onload=function(ev){
     const data=new Uint8Array(ev.target.result);
     const wb=XLSX.read(data,{type:'array'});
     const ws=wb.Sheets[wb.SheetNames[0]];
-    previewData=XLSX.utils.sheet_to_json(ws,{header:1});
-    previewHeaders=previewData[0]||[];
-    document.getElementById('importPreview').classList.remove('hidden');
-    renderFieldMap(); renderPreview();
+    const json=XLSX.utils.sheet_to_json(ws,{header:1});
+    alert('导入成功，共'+json.length+'行数据');
   };
   r.readAsArrayBuffer(f);
-}
-function renderFieldMap(){
-  const fm=document.getElementById('fieldMap'); fm.innerHTML='';
-  ['指标名称','实际值','目标值','备注'].forEach(field=>{
-    const row=document.createElement('div'); row.className='field-map-row';
-    const label=document.createElement('div'); label.className='field-map-label'; label.textContent=field;
-    const sel=document.createElement('select'); sel.className='field-map-select';
-    sel.innerHTML='<option value="">-- 请选择 --</option>'+previewHeaders.map((h,i)=>'<option value="'+i+'">'+h+'</option>').join('');
-    row.appendChild(label); row.appendChild(sel); fm.appendChild(row);
-  });
-}
-function renderPreview(){
-  const pt=document.getElementById('previewTable');
-  let html='<table class="metric-table"><thead><tr>';
-  previewHeaders.forEach(h=>html+='<th>'+h+'</th>'); html+='</tr></thead><tbody>';
-  previewData.slice(1,21).forEach(row=>{html+='<tr>'; row.forEach(c=>html+='<td>'+(c||'')+'</td>'); html+='</tr>';});
-  html+='</tbody></table>'; pt.innerHTML=html;
-}
-function confirmImport(){alert('导入成功！数据已应用。'); cancelImport();}
-function cancelImport(){document.getElementById('importPreview').classList.add('hidden'); document.getElementById('fileInput').value='';}
-
-function downloadFullTemplate(){
-  const wb=XLSX.utils.book_new();
-  ['rd','purchase','production'].forEach(k=>{
-    const tpl=getDefaultTpl(k);
-    const ws=XLSX.utils.aoa_to_sheet([['指标','实际值','目标值','偏差率','备注']].concat(tpl.map(x=>[x,'','','',''])));
-    XLSX.utils.book_append_sheet(wb,ws,k);
-  });
-  XLSX.writeFile(wb,'供应链经营报告_完整导入模板.xlsx');
-}
+});
 function downloadTemplate(type){
-  const tpl=getDefaultTpl(type);
-  const ws=XLSX.utils.aoa_to_sheet([['指标','实际值','目标值','偏差率','备注']].concat(tpl.map(x=>[x,'','','',''])));
-  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,type);
-  XLSX.writeFile(wb,'供应链经营报告_'+type+'_模板.xlsx');
-}
-function getDefaultTpl(type){
-  const map={
-    rd:['在研项目总数','当期转量产项目数','研发周期达标率','研发总投入金额（万元）','研发物料消耗占总采购额比例','新产品物料复用率','新供应商平均导入周期（天）','新产品小批量试产良率','试产问题闭环平均周期（天）'],
-    purchase:['采购总金额（万元）','采购预算达成率','整体到货及时率','来料质检合格率','紧急采购金额占比'],
-    production:['总生产成本（万元）','单位产品生产成本','生产成本预算达成率','直接材料占比','直接人工占比','制造费用占比','人均产出（万元/人）','设备稼动率','生产线平衡率','订单平均生产周期（天）','制造费用率','单位能耗成本','生产物料整体损耗率','成品良率','返工率','不良品报废金额（万元）']
+  const tpls={
+    rd:['在研项目总数','当期转量产项目数','研发周期达标率','研发总投入金额(万元)','研发物料消耗占总采购额比例','新产品物料复用率','新供应商平均导入周期(天)','新产品小批量试产良率','试产问题闭环平均周期(天)'],
+    purchase:['采购总金额(万元)','采购预算达成率','整体到货及时率','来料质检合格率','紧急采购金额占比'],
+    production:['总生产成本(万元)','单位产品生产成本','生产成本预算达成率','直接材料占比','直接人工占比','制造费用占比','人均产出(万元/人)','设备稼动率','生产线平衡率','订单平均生产周期(天)','制造费用率','单位能耗成本','生产物料整体损耗率','成品良率','返工率','不良品报废金额(万元)'],
+    all:[]
   };
-  return map[type]||[];
+  if(type==='all'){
+    const wb=XLSX.utils.book_new();
+    ['rd','purchase','production'].forEach(k=>{
+      const ws=XLSX.utils.aoa_to_sheet([['指标','实际值','目标值']].concat(tpls[k].map(x=>[x,'',''])));
+      XLSX.utils.book_append_sheet(wb,ws,k);
+    });
+    XLSX.writeFile(wb,'供应链经营报告_完整导入模板.xlsx');
+  } else {
+    const ws=XLSX.utils.aoa_to_sheet([['指标','实际值','目标值']].concat(tpls[type].map(x=>[x,'',''])));
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,type);
+    XLSX.writeFile(wb,'供应链经营报告_'+type+'_模板.xlsx');
+  }
 }
 
+// ===== 模拟 =====
+function runSim(){
+  const p=parseFloat(document.getElementById('sim-price')?.value||0);
+  const c=parseFloat(document.getElementById('sim-cap')?.value||0);
+  const d=parseFloat(document.getElementById('sim-demand')?.value||0);
+  // 同步左侧
+  const sp=document.getElementById('side-sim-price');if(sp)sp.value=p;
+  const sc=document.getElementById('side-sim-cap');if(sc)sc.value=c;
+  const sd=document.getElementById('side-sim-demand');if(sd)sd.value=d;
+  // 更新图表
+  if(!charts.sim)charts.sim=echarts.init(document.getElementById('chart-sim'));
+  const gm=22.3-p*0.15+c*0.05+d*0.08;
+  const cm=68.5+p*0.2-c*0.03-d*0.05;
+  charts.sim.setOption({xAxis:{type:'category',data:['当前','模拟后']},yAxis:[{type:'value',name:'%'},{type:'value',name:'%'}],series:[{name:'毛利率%',type:'bar',data:[22.3,gm.toFixed(1)]},{name:'成本占比%',type:'bar',yAxisIndex:1,data:[68.5,cm.toFixed(1)]}]});
+}
+
+// ===== 初始化 =====
+document.querySelectorAll('.nav-item').forEach(btn=>{
+  btn.addEventListener('click',()=>switchPanel(btn.dataset.panel));
+});
 window.addEventListener('DOMContentLoaded',()=>{
-  document.querySelectorAll('.metric-table td input[data-type]').forEach(inp=>calcVar(inp));
-  initOverview();
+  renderSidebar('overview');
+  refreshAll();
+  setTimeout(()=>initCharts('overview'),50);
+});
+window.addEventListener('resize',()=>{
+  Object.values(charts).forEach(c=>c&&c.resize());
 });
 </script>
 </body>
