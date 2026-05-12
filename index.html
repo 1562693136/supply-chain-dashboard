@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>供应链经营报告看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #1f2937; }
+        .header { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: #fff; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.12); position: sticky; top: 0; z-index: 100; }
+        .header h1 { font-size: 20px; font-weight: 600; letter-spacing: .5px; }
+        .nav-tabs { display: flex; gap: 4px; }
+        .nav-tab { padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all .2s; border: none; background: rgba(255,255,255,.15); color: #fff; }
+        .nav-tab:hover { background: rgba(255,255,255,.25); }
+        .nav-tab.active { background: #fff; color: #1e3a8a; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .panel { display: none; animation: fadeIn .3s ease; }
+        .panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+        .card-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; gap: 8px; }
+        .card-title .icon { width: 6px; height: 18px; background: #3b82f6; border-radius: 3px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; }
+        .kpi-card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); position: relative; overflow: hidden; }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+        .kpi-card.blue::before { background: #3b82f6; }
+        .kpi-card.green::before { background: #10b981; }
+        .kpi-card.orange::before { background: #f59e0b; }
+        .kpi-card.red::before { background: #ef4444; }
+        .kpi-card.purple::before { background: #8b5cf6; }
+        .kpi-label { font-size: 13px; color: #6b7280; margin-bottom: 6px; }
+        .kpi-value { font-size: 28px; font-weight: 700; color: #1f2937; letter-spacing: -.5px; }
+        .kpi-change { font-size: 12px; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+        .kpi-change.up { color: #10b981; }
+        .kpi-change.down { color: #ef4444; }
+        .chart-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 16px; }
+        .chart-full { width: 100%; height: 340px; }
+        .chart-half { width: 100%; height: 300px; }
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 6px; border: none; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .2s; }
+        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: #10b981; color: #fff; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: #fff; }
+        .btn-secondary { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .upload-zone { border: 2px dashed #d1d5db; border-radius: 10px; padding: 40px; text-align: center; cursor: pointer; transition: all .2s; background: #fafafa; }
+        .upload-zone:hover, .upload-zone.dragover { border-color: #3b82f6; background: #eff6ff; }
+        .upload-zone .icon { font-size: 40px; color: #9ca3af; margin-bottom: 12px; }
+        .upload-zone p { color: #6b7280; font-size: 14px; }
+        .upload-zone .hint { color: #9ca3af; font-size: 12px; margin-top: 8px; }
+        .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #e5e7eb; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #f8fafc; padding: 10px 12px; text-align: left; font-weight: 600; color: #4b5563; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+        td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #374151; }
+        tr:hover td { background: #f8fafc; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+        .badge-green { background: #d1fae5; color: #065f46; }
+        .badge-yellow { background: #fef3c7; color: #92400e; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .field-map { display: grid; gap: 10px; }
+        .field-row { display: grid; grid-template-columns: 1fr 1fr 120px 80px; gap: 10px; align-items: center; padding: 10px; background: #f8fafc; border-radius: 6px; }
+        .field-row .label { font-size: 13px; color: #4b5563; }
+        .field-row select, .field-row input { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; width: 100%; }
+        .actions { display: flex; gap: 8px; margin-top: 16px; }
+        .progress-bar { height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+        .progress-fill { height: 100%; background: #3b82f6; border-radius: 3px; transition: width .3s; }
+        .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .filter-bar input, .filter-bar select { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+        .tab-sub { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+        .tab-sub button { padding: 6px 14px; border: none; background: none; font-size: 13px; color: #6b7280; cursor: pointer; border-radius: 4px; }
+        .tab-sub button.active { background: #eff6ff; color: #3b82f6; font-weight: 500; }
+        .hidden { display: none; }
+        .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; }
+        .alert-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        .text-right { text-align: right; }
+        .font-mono { font-family: 'SF Mono', Monaco, monospace; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>供应链经营报告看板</h1>
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchPanel('dashboard')">经营看板</button>
+            <button class="nav-tab" onclick="switchPanel('import')">数据导入</button>
+            <button class="nav-tab" onclick="switchPanel('template')">模板配置</button>
+            <button class="nav-tab" onclick="switchPanel('analysis')">模拟分析</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 经营看板 -->
+        <div id="panel-dashboard" class="panel active">
+            <div class="kpi-grid">
+                <div class="kpi-card blue">
+                    <div class="kpi-label">本月采购总额</div>
+                    <div class="kpi-value" id="kpi-purchase">¥2,847万</div>
+                    <div class="kpi-change up">↑ 12.4% 环比</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-label">库存周转天数</div>
+                    <div class="kpi-value" id="kpi-turnover">28.6天</div>
+                    <div class="kpi-change up">↓ 3.2天 优化</div>
+                </div>
+                <div class="kpi-card orange">
+                    <div class="kpi-label">订单满足率</div>
+                    <div class="kpi-value" id="kpi-fulfill">96.8%</div>
+                    <div class="kpi-change up">↑ 1.5% 环比</div>
+                </div>
+                <div class="kpi-card purple">
+                    <div class="kpi-label">供应商准时交付率</div>
+                    <div class="kpi-value" id="kpi-otd">91.3%</div>
+                    <div class="kpi-change down">↓ 2.1% 需关注</div>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-label">供应链总成本</div>
+                    <div class="kpi-value" id="kpi-cost">¥4,156万</div>
+                    <div class="kpi-change down">↑ 8.7% 超预算</div>
+                </div>
+            </div>
+
+            <div class="chart-row">
+                <div class="card">
+                    <div class="card-title"><span class="icon"></span>采购趋势（近12月）</div>
+                    <div id="chart-purchase-trend" class="chart-half"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon"></span>库存结构分布</div>
+                    <div id="chart-inventory-pie" class="chart-half"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon"></span>销售-采购-库存联动分析</div>
+                <div id="chart-spi-trend" class="chart-full"></div>
+            </div>
+
+            <div class="chart-row">
+                <div class="card">
+                    <div class="card-title"><span class="icon"></span>供应商交付绩效TOP10</div>
+                    <div id="chart-supplier-otd" class="chart-half"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon"></span>物料ABC分类占比</div>
+                    <div id="chart-abc" class="chart-half"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon"></span>成本要素拆解</div>
+                <div id="chart-cost-breakdown" class="chart-full"></div>
+            </div>
+        </div>
+
+        <!-- 数据导入 -->
+        <div id="panel-import" class="panel">
+            <div class="alert alert-info">支持导入 .xlsx / .xls / .csv 格式文件。系统将自动识别字段并进行单位统一转换。</div>
+            <div class="upload-zone" id="uploadZone">
+                <div class="icon">📤</div>
+                <p>点击上传或拖拽文件至此处</p>
+                <div class="hint">支持 Excel、CSV 格式 | 单文件最大 10MB</div>
+            </div>
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none">
+
+            <div id="importPreview" class="hidden">
+                <div class="card">
+                    <div class="card-title"><span class="icon"></span>字段映射配置</div>
+                    <div class="field-map" id="fieldMap"></div>
+                    <div class="actions">
+                        <button class="btn btn-primary" onclick="confirmImport()">确认导入</button>
+                        <button class="btn btn-secondary" onclick="cancelImport()">取消</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon"></span>数据预览（前20行）</div>
+                    <div class="table-wrap" id="previewTable"></div>
+                </div>
+            </div>
+
+            <div class="card" id="importedDataCard" style="display:none">
+                <div class="card-title"><span class="icon"></span>已导入数据</div>
+                <div class="filter-bar">
+                    <input type="text" id="searchImported" placeholder="搜索物料/供应商..." oninput="filterImported()">
+                    <select id="filterCategory" onchange="filterImported()">
+                        <option value="">全部类别</option>
+                        <option value="原材料">原材料</option>
+                        <option value="半成品">半成品</option>
+                        <option value="成品">成品</option>
+                    </select>
+                    <button class="btn btn-danger" onclick="clearImported()">清空数据</button>
+                    <button class="btn btn-success" onclick="exportImported()">导出数据</button>
+                </div>
+                <div class="table-wrap" id="importedTable"></div>
+            </div>
+        </div>
+
+        <!-- 模板配置 -->
+        <div id="panel-template" class="panel">
+            <div class="card">
+                <div class="card-title"><span class="icon"></span>导入模板字段定义</div>
+                <div class="tab-sub">
+                    <button class="active" onclick="switchTplTab('purchase')">采购模板</button>
+                    <button onclick="switchTplTab('inventory')">库存模板</button>
+                    <button onclick="switchTplTab('sales')">销售模板</button>
+                    <button onclick="switchTplTab('supplier')">供应商模板</button>
+                </div>
+                <div id="tpl-purchase" class="tpl-panel">
+                    <div class="actions" style="margin-bottom:12px">
+                        <button class="btn btn-primary" onclick="addTplRow('purchase')">+ 添加字段</button>
+                        <button class="btn btn-secondary" onclick="resetTpl('purchase')">恢复默认</button>
+                        <button class="btn btn-success" onclick="downloadTpl('purchase')">下载模板</button>
+                    </div>
+                    <div class="table-wrap"><table id="tbl-tpl-purchase"><thead><tr><th>字段名称</th><th>数据类型</th><th>单位</th><th>必填</th><th>映射规则</th><th>操作</th></tr></thead><tbody></tbody></table></div>
+                </div>
+                <div id="tpl-inventory" class="tpl-panel hidden">
+                    <div class="actions" style="margin-bottom:12px">
+                        <button class="btn btn-primary" onclick="addTplRow('inventory')">+ 添加字段</button>
+                        <button class="btn btn-secondary" onclick="resetTpl('inventory')">恢复默认</button>
+                        <button class="btn btn-success" onclick="downloadTpl('inventory')">下载模板</button>
+                    </div>
+                    <div class="table-wrap"><table id="tbl-tpl-inventory"><thead><tr><th>字段名称</th><th>数据类型</th><th>单位</th><th>必填</th><th>映射规则</th><th>操作</th></tr></thead><tbody></tbody></table></div>
+                </div>
+                <div id="tpl-sales" class="tpl-panel hidden">
+                    <div class="actions" style="margin-bottom:12px">
+                        <button class="btn btn-primary" onclick="addTplRow('sales')">+ 添加字段</button>
+                        <button class="btn btn-secondary" onclick="resetTpl('sales')">恢复默认</button>
+                        <button class="btn btn-success" onclick="downloadTpl('sales')">下载模板</button>
+                    </div>
+                    <div class="table-wrap"><table id="tbl-tpl-sales"><thead><tr><th>字段名称</th><th>数据类型</th><th>单位</th><th>必填</th><th>映射规则</th><th>操作</th></tr></thead><tbody></tbody></table></div>
+                </div>
+                <div id="tpl-supplier" class="tpl-panel hidden">
+                    <div class="actions" style="margin-bottom:12px">
+                        <button class="btn btn-primary" onclick="addTplRow('supplier')">+ 添加字段</button>
+                        <button class="btn btn-secondary" onclick="resetTpl('supplier')">恢复默认</button>
+                        <button class="btn btn-success" onclick="downloadTpl('supplier')">下载模板</button>
+                    </div>
+                    <div class="table-wrap"><table id="tbl-tpl-supplier"><thead><tr><th>字段名称</th><th>数据类型</th><th>单位</th><th>必填</th><th>映射规则</th><th>操作</th></tr></thead><tbody></tbody></table></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon"></span>单位统一规则</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>原始单位</th><th>统一换算为</th><th>换算系数</th><th>适用场景</th></tr></thead>
+                        <tbody id="unitRulesBody"></tbody>
+                    </table>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="addUnitRule()">+ 添加规则</button>
+                    <button class="btn btn-secondary" onclick="resetUnitRules()">恢复默认</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模拟分析 -->
+        <div id="panel-analysis" class="panel">
+            <div class="kpi-grid">
+                <div class="kpi-card blue">
+                    <div class="kpi-label">模拟采购成本优化</div>
+                    <div class="kpi-value">-8.3%</div>
+                    <div class="kpi-change up">预计节省 ¥236万/年</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-label">库存资金占用优化</div>
+                    <div class="kpi-value">-15.2%</div>
+                    <div class="kpi-change up">释放资金 ¥412万</div>
+                </div>
+                <div class="kpi-card orange">
+                    <div class="kpi-label">供应商集中度风险</div>
+                    <div class="kpi-value">CR3=67%</div>
+                    <div class="kpi-change down">偏高，建议分散</div>
+                </div>
+                <div class="kpi-card purple">
+                    <div class="kpi-label">安全库存模拟</div>
+                    <div class="kpi-value">↓ 22%</div>
+                    <div class="kpi-change up">不影响满足率</div>
+                </div>
+            </div>
+
+            <div class="chart-row">
+                <div class="card">
+                    <div class="card-title"><span class="icon"></span>需求预测 vs 实际（模拟）</div>
+                    <div id="chart-forecast" class="chart-half"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="icon"></span>供应商替代方案模拟</div>
+                    <div id="chart-supplier-alt" class="chart-half"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon"></span>敏感性分析：价格波动对总成本影响</div>
+                <div id="chart-sensitivity" class="chart-full"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon"></span>情景模拟配置</div>
+                <div class="filter-bar">
+                    <label>原材料涨价幅度：<input type="range" id="simPrice" min="-20" max="50" value="10" oninput="updateSim()"> <span id="simPriceVal">+10%</span></label>
+                    <label>订单量变化：<input type="range" id="simVolume" min="-30" max="50" value="15" oninput="updateSim()"> <span id="simVolumeVal">+15%</span></label>
+                    <label>交期延长：<input type="range" id="simLead" min="0" max="30" value="5" oninput="updateSim()"> <span id="simLeadVal">+5天</span></label>
+                </div>
+                <div id="simResult" style="margin-top:12px; padding:16px; background:#f8fafc; border-radius:8px; font-size:14px; line-height:2;"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ==================== 全局数据 ====================
+let appData = {
+    purchase: [],
+    inventory: [],
+    sales: [],
+    supplier: [],
+    templates: {
+        purchase: [
+            {name:'采购单号', type:'文本', unit:'-', required:true, rule:'唯一标识'},
+            {name:'物料编码', type:'文本', unit:'-', required:true, rule:'关联物料主数据'},
+            {name:'物料名称', type:'文本', unit:'-', required:true, rule:'-'},
+            {name:'供应商', type:'文本', unit:'-', required:true, rule:'关联供应商主数据'},
+            {name:'采购数量', type:'数字', unit:'件', required:true, rule:'统一换算为基本单位'},
+            {name:'单价', type:'金额', unit:'元', required:true, rule:'不含税'},
+            {name:'采购金额', type:'金额', unit:'元', required:false, rule:'=数量×单价'},
+            {name:'下单日期', type:'日期', unit:'-', required:true, rule:'YYYY-MM-DD'},
+            {name:'要求交期', type:'日期', unit:'-', required:true, rule:'YYYY-MM-DD'},
+            {name:'实际交期', type:'日期', unit:'-', required:false, rule:'用于计算OTD'},
+            {name:'采购类型', type:'枚举', unit:'-', required:true, rule:'原材料/半成品/成品/MRO'},
+            {name:'所属项目', type:'文本', unit:'-', required:false, rule:'可空'}
+        ],
+        inventory: [
+            {name:'物料编码', type:'文本', unit:'-', required:true, rule:'唯一标识'},
+            {name:'物料名称', type:'文本', unit:'-', required:true, rule:'-'},
+            {name:'库存数量', type:'数字', unit:'件', required:true, rule:'实时库存'},
+            {name:'安全库存', type:'数字', unit:'件', required:true, rule:'理论安全库存'},
+            {name:'在途数量', type:'数字', unit:'件', required:false, rule:'已下单未到货'},
+            {name:'仓库位置', type:'文本', unit:'-', required:false, rule:'库位编码'},
+            {name:'ABC分类', type:'枚举', unit:'-', required:false, rule:'A/B/C'},
+            {name:'库存金额', type:'金额', unit:'元', required:false, rule:'=库存×标准成本'},
+            {name:'最后入库日期', type:'日期', unit:'-', required:false, rule:'YYYY-MM-DD'},
+            {name:'周转天数', type:'数字', unit:'天', required:false, rule:'=库存/日均消耗'}
+        ],
+        sales: [
+            {name:'销售订单号', type:'文本', unit:'-', required:true, rule:'唯一标识'},
+            {name:'客户名称', type:'文本', unit:'-', required:true, rule:'-'},
+            {name:'物料编码', type:'文本', unit:'-', required:true, rule:'-'},
+            {name:'销售数量', type:'数字', unit:'件', required:true, rule:'-'},
+            {name:'销售单价', type:'金额', unit:'元', required:true, rule:'不含税'},
+            {name:'销售金额', type:'金额', unit:'元', required:false, rule:'=数量×单价'},
+            {name:'订单日期', type:'日期', unit:'-', required:true, rule:'YYYY-MM-DD'},
+            {name:'要求交付日期', type:'日期', unit:'-', required:true, rule:'YYYY-MM-DD'},
+            {name:'实际交付日期', type:'日期', unit:'-', required:false, rule:'用于计算准时交付率'},
+            {name:'销售渠道', type:'枚举', unit:'-', required:false, rule:'直销/分销/电商/海外'},
+            {name:'销售区域', type:'文本', unit:'-', required:false, rule:'-'}
+        ],
+        supplier: [
+            {name:'供应商编码', type:'文本', unit:'-', required:true, rule:'唯一标识'},
+            {name:'供应商名称', type:'文本', unit:'-', required:true, rule:'-'},
+            {name:'供应商类型', type:'枚举', unit:'-', required:true, rule:'战略/优先/合格/淘汰'},
+            {name:'合作金额', type:'金额', unit:'元', required:false, rule:'年度累计'},
+            {name:'准时交付率', type:'百分比', unit:'%', required:false, rule:'0-100'},
+            {name:'质量合格率', type:'百分比', unit:'%', required:false, rule:'0-100'},
+            {name:'平均交期', type:'数字', unit:'天', required:false, rule:'工作日'},
+            {name:'供应物料类别', type:'文本', unit:'-', required:false, rule:'-'},
+            {name:'合作状态', type:'枚举', unit:'-', required:true, rule:'活跃/暂停/终止'}
+        ]
+    },
+    unitRules: [
+        {from:'吨', to:'千克', factor:1000, scene:'重量'},
+        {from:'千克', to:'千克', factor:1, scene:'重量'},
+        {from:'克', to:'千克', factor:0.001, scene:'重量'},
+        {from:'万件', to:'件', factor:10000, scene:'数量'},
+        {from:'千件', to:'件', factor:1000, scene:'数量'},
+        {from:'百件', to:'件', factor:100, scene:'数量'},
+        {from:'万元', to:'元', factor:10000, scene:'金额'},
+        {from:'千元', to:'元', factor:1000, scene:'金额'},
+        {from:'周', to:'天', factor:7, scene:'时间'},
+        {from:'月', to:'天', factor:30, scene:'时间'}
+    ]
+};
+
+// ==================== 模拟数据生成 ====================
+function generateMockData() {
+    const suppliers = ['华东钢铁','南方铝业','中原化工','远东电子','珠江橡胶','西部矿业','北方能源','东海纺织'];
+    const materials = ['冷轧钢板','铝合金型材','聚丙烯PP','IC芯片','天然橡胶','铜材线材','动力煤','涤纶长丝'];
+    const months = ['2025-06','2025-07','2025-08','2025-09','2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04','2026-05'];
+    
+    // 采购数据
+    appData.purchase = [];
+    for(let i=0;i<300;i++) {
+        const m = months[Math.floor(Math.random()*months.length)];
+        const q = Math.floor(Math.random()*500)+50;
+        const p = Math.floor(Math.random()*800)+100;
+        appData.purchase.push({
+            采购单号: `PO-${20250000+i}`,
+            物料编码: `M-${1000+i}`,
+            物料名称: materials[Math.floor(Math.random()*materials.length)],
+            供应商: suppliers[Math.floor(Math.random()*suppliers.length)],
+            采购数量: q,
+            单价: p,
+            采购金额: q*p,
+            下单日期: `${m}-${String(Math.floor(Math.random()*28)+1).padStart(2,'0')}`,
+            要求交期: `${m}-${String(Math.floor(Math.random()*28)+1).padStart(2,'0')}`,
+            实际交期: `${m}-${String(Math.floor(Math.random()*28)+1).padStart(2,'0')}`,
+            采购类型: ['原材料','半成品','成品','MRO'][Math.floor(Math.random()*4)],
+            所属项目: ['项目A','项目B','项目C','常规'][Math.floor(Math.random()*4)]
+        });
+    }
+    
+    // 库存数据
+    appData.inventory = [];
+    for(let i=0;i<80;i++) {
+        const stock = Math.floor(Math.random()*2000)+100;
+        const safety = Math.floor(Math.random()*300)+50;
+        const unitCost = Math.floor(Math.random()*500)+50;
+        appData.inventory.push({
+            物料编码: `M-${1000+i}`,
+            物料名称: materials[i%materials.length]+'-'+(i+1),
+            库存数量: stock,
+            安全库存: safety,
+            在途数量: Math.floor(Math.random()*300),
+            仓库位置: ['A01','A02','B01','B02','C01'][Math.floor(Math.random()*5)],
+            ABC分类: stock>1500?'A':(stock>800?'B':'C'),
+            库存金额: stock*unitCost,
+            最后入库日期: `2026-0${Math.floor(Math.random()*5)+1}-${String(Math.floor(Math.random()*28)+1).padStart(2,'0')}`,
+            周转天数: Math.floor(Math.random()*45)+15
+        });
+    }
+    
+    // 销售数据
+    appData.sales = [];
+    const customers = ['华为','比亚迪','宁德时代','美的','格力','海尔','小米','OPPO'];
+    for(let i=0;i<200;i++) {
+        const m = months[Math.floor(Math.random()*months.length)];
+        const q = Math.floor(Math.random()*300)+20;
+        const p = Math.floor(Math.random()*1200)+200;
+        appData.sales.push({
+            销售订单号: `SO-${20250000+i}`,
+            客户名称: customers[Math.floor(Math.random()*customers.length)],
+            物料编码: `M-${1000+Math.floor(Math.random()*80)}`,
+            销售数量: q,
+            销售单价: p,
+            销售金额: q*p,
+            订单日期: `${m}-${String(Math.floor(Math.random()*28)+1).padStart(2,'0')}`,
+            要求交付日期: `${m}-${String(Math.floor(Math.random()*28)+1).padStart(2,'0')}`,
+            实际交付日期: `${m}-${String(Math.floor(Math.random()*28)+1).padStart(2,'0')}`,
+            销售渠道: ['直销','分销','电商','海外'][Math.floor(Math.random()*4)],
+            销售区域: ['华东','华南','华北','西南','海外'][Math.floor(Math.random()*5)]
+        });
+    }
+    
+    // 供应商数据
+    appData.supplier = suppliers.map((name,i)=>({
+        供应商编码: `S-${1000+i}`,
+        供应商名称: name,
+        供应商类型: ['战略','优先','合格','淘汰'][Math.floor(Math.random()*4)],
+        合作金额: Math.floor(Math.random()*500)*10000,
+        准时交付率: Math.floor(Math.random()*25)+75,
+        质量合格率: Math.floor(Math.random()*15)+85,
+        平均交期: Math.floor(Math.random()*20)+5,
+        供应物料类别: materials[i%materials.length],
+        合作状态: ['活跃','活跃','活跃','暂停'][Math.floor(Math.random()*4)]
+    }));
+}
+
+// ==================== 面板切换 ====================
+function switchPanel(id) {
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('panel-'+id).classList.add('active');
+    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+    event.target.classList.add('active');
+    if(id==='dashboard') setTimeout(initDashboard, 50);
+    if(id==='analysis') setTimeout(initAnalysis, 50);
+    if(id==='template') renderTemplates();
+}
+
+// ==================== 经营看板图表 ====================
+function initDashboard() {
+    // 采购趋势
+    const purchaseByMonth = {};
+    appData.purchase.forEach(r=>{
+        const m = r.下单日期.slice(0,7);
+        purchaseByMonth[m] = (purchaseByMonth[m]||0) + r.采购金额;
+    });
+    const pmKeys = Object.keys(purchaseByMonth).sort();
+    echarts.init(document.getElementById('chart-purchase-trend')).setOption({
+        tooltip:{trigger:'axis'},
+        xAxis:{type:'category',data:pmKeys,axisLabel:{rotate:30}},
+        yAxis:{type:'value',name:'金额(万)',axisLabel:{formatter:v=>(v/10000).toFixed(0)}},
+        series:[{data:pmKeys.map(k=>purchaseByMonth[k]),type:'line',smooth:true,areaStyle:{color:'rgba(59,130,246,0.15)'},lineStyle:{color:'#3b82f6',width:3},itemStyle:{color:'#3b82f6'}}]
+    });
+    
+    // 库存结构
+    const invABC = {A:0,B:0,C:0};
+    appData.inventory.forEach(r=>invABC[r.ABC分类]++);
+    echarts.init(document.getElementById('chart-inventory-pie')).setOption({
+        tooltip:{trigger:'item'},
+        legend:{bottom:0},
+        series:[{type:'pie',radius:['40%','70%'],data:[
+            {value:invABC.A,name:'A类(高值)'},
+            {value:invABC.B,name:'B类(中值)'},
+            {value:invABC.C,name:'C类(低值)'}
+        ],itemStyle:{borderRadius:6,borderColor:'#fff',borderWidth:2}}]
+    });
+    
+    // 销售-采购-库存联动
+    const salesByMonth = {};
+    appData.sales.forEach(r=>{
+        const m = r.订单日期.slice(0,7);
+        salesByMonth[m] = (salesByMonth[m]||0) + r.销售金额;
+    });
+    const smKeys = Object.keys(salesByMonth).sort();
+    const allMonths = [...new Set([...pmKeys,...smKeys])].sort();
+    echarts.init(document.getElementById('chart-spi-trend')).setOption({
+        tooltip:{trigger:'axis'},
+        legend:{top:0},
+        xAxis:{type:'category',data:allMonths},
+        yAxis:[
+            {type:'value',name:'金额(万)',axisLabel:{formatter:v=>(v/10000).toFixed(0)}},
+            {type:'value',name:'库存额(万)',axisLabel:{formatter:v=>(v/10000).toFixed(0)}}
+        ],
+        series:[
+            {name:'采购额',type:'bar',data:allMonths.map(m=>purchaseByMonth[m]||0),itemStyle:{color:'#3b82f6'}},
+            {name:'销售额',type:'bar',data:allMonths.map(m=>salesByMonth[m]||0),itemStyle:{color:'#10b981'}},
+            {name:'库存额',type:'line',yAxisIndex:1,data:allMonths.map(m=>{
+                return appData.inventory.reduce((s,r)=>s+r.库存金额,0) * (0.9+Math.random()*0.2);
+            }),lineStyle:{color:'#f59e0b',width:3},itemStyle:{color:'#f59e0b'}}
+        ]
+    });
+    
+    // 供应商交付绩效
+    const supOtd = appData.supplier.map(s=>({name:s.供应商名称,value:s.准时交付率})).sort((a,b)=>b.value-a.value);
+    echarts.init(document.getElementById('chart-supplier-otd')).setOption({
+        tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+        xAxis:{type:'value',max:100,axisLabel:{formatter:'{value}%'}},
+        yAxis:{type:'category',data:supOtd.map(s=>s.name),inverse:true},
+        series:[{type:'bar',data:supOtd.map(s=>s.value),itemStyle:{color:'#3b82f6'},label:{show:true,position:'right',formatter:'{c}%'}}]
+    });
+    
+    // ABC占比金额
+    const abcVal = {A:0,B:0,C:0};
+    appData.inventory.forEach(r=>abcVal[r.ABC分类]+=r.库存金额);
+    echarts.init(document.getElementById('chart-abc')).setOption({
+        tooltip:{trigger:'item'},
+        series:[{type:'pie',radius:'65%',data:[
+            {value:abcVal.A,name:'A类',itemStyle:{color:'#ef4444'}},
+            {value:abcVal.B,name:'B类',itemStyle:{color:'#f59e0b'}},
+            {value:abcVal.C,name:'C类',itemStyle:{color:'#3b82f6'}}
+        ]}]
+    });
+    
+    // 成本要素拆解
+    const costBreak = [
+        {name:'原材料成本',value:2847},{name:'人工成本',value:620},{name:'制造费用',value:430},
+        {name:'物流仓储',value:185},{name:'质量成本',value:74}
+    ];
+    echarts.init(document.getElementById('chart-cost-breakdown')).setOption({
+        tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+        xAxis:{type:'category',data:costBreak.map(c=>c.name)},
+        yAxis:{type:'value',name:'金额(万)'},
+        series:[{type:'bar',data:costBreak.map(c=>c.value),itemStyle:{color:(p)=>['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444'][p.dataIndex]},label:{show:true,position:'top',formatter:'{c}万'}}]
+    });
+    
+    // 更新KPI
+    const totalPurchase = appData.purchase.reduce((s,r)=>s+r.采购金额,0);
+    const totalSales = appData.sales.reduce((s,r)=>s+r.销售金额,0);
+    const totalInv = appData.inventory.reduce((s,r)=>s+r.库存金额,0);
+    const avgOtd = appData.supplier.reduce((s,r)=>s+r.准时交付率,0)/appData.supplier.length;
+    document.getElementById('kpi-purchase').textContent = '¥'+(totalPurchase/10000).toFixed(0)+'万';
+    document.getElementById('kpi-cost').textContent = '¥'+((totalPurchase+totalInv*0.05)/10000).toFixed(0)+'万';
+    document.getElementById('kpi-otd').textContent = avgOtd.toFixed(1)+'%';
+}
+
+// ==================== 模拟分析图表 ====================
+function initAnalysis() {
+    // 需求预测
+    const forecast = [];
+    const actual = [];
+    for(let i=1;i<=12;i++) {
+        forecast.push(800+Math.random()*400);
+        actual.push(700+Math.random()*500);
+    }
+    echarts.init(document.getElementById('chart-forecast')).setOption({
+        tooltip:{trigger:'axis'},
+        xAxis:{type:'category',data:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月']},
+        yAxis:{type:'value'},
+        series:[
+            {name:'预测需求',type:'line',data:forecast,lineStyle:{type:'dashed',color:'#3b82f6'},itemStyle:{color:'#3b82f6'}},
+            {name:'实际需求',type:'bar',data:actual,itemStyle:{color:'#10b981'}}
+        ]
+    });
+    
+    // 供应商替代
+    echarts.init(document.getElementById('chart-supplier-alt')).setOption({
+        tooltip:{trigger:'axis'},
+        legend:{bottom:0},
+        xAxis:{type:'category',data:['方案A(现有)','方案B(替代30%)','方案C(替代50%)','方案D(替代70%)']},
+        yAxis:[
+            {type:'value',name:'总成本(万)'},
+            {type:'value',name:'风险指数'}
+        ],
+        series:[
+            {name:'总采购成本',type:'bar',data:[2847,2650,2450,2280],itemStyle:{color:'#3b82f6'}},
+            {name:'供应风险',type:'line',yAxisIndex:1,data:[65,52,42,38],lineStyle:{color:'#ef4444'},itemStyle:{color:'#ef4444'}}
+        ]
+    });
+    
+    // 敏感性分析
+    echarts.init(document.getElementById('chart-sensitivity')).setOption({
+        tooltip:{trigger:'axis'},
+        legend:{top:0},
+        xAxis:{type:'category',data:['-20%','-10%','0%','+10%','+20%','+30%','+50%']},
+        yAxis:{type:'value',name:'总成本变化(万)'},
+        series:[
+            {name:'原材料涨价',type:'line',data:[3800,4000,4156,4350,4550,4750,5100],lineStyle:{color:'#ef4444',width:3},itemStyle:{color:'#ef4444'}},
+            {name:'运费上涨',type:'line',data:[4050,4100,4156,4220,4290,4360,4500],lineStyle:{color:'#f59e0b',width:2},itemStyle:{color:'#f59e0b'}},
+            {name:'人工上涨',type:'line',data:[4000,4080,4156,4240,4320,4400,4560],lineStyle:{color:'#8b5cf6',width:2},itemStyle:{color:'#8b5cf6'}}
+        ]
+    });
+    
+    updateSim();
+}
+
+function updateSim() {
+    const price = parseInt(document.getElementById('simPrice').value);
+    const volume = parseInt(document.getElementById('simVolume').value);
+    const lead = parseInt(document.getElementById('simLead').value);
+    document.getElementById('simPriceVal').textContent = (price>0?'+':'')+price+'%';
+    document.getElementById('simVolumeVal').textContent = (volume>0?'+':'')+volume+'%';
+    document.getElementById('simLeadVal').textContent = '+'+lead+'天';
+    
+    const baseCost = 4156;
+    const newCost = baseCost * (1+price/100) * (1+volume/100*0.6);
+    const stockNeed = Math.ceil(lead * 1.2);
+    const cashNeed = Math.ceil(newCost * 0.3);
+    
+    document.getElementById('simResult').innerHTML = `
+        <b>情景模拟结果：</b><br>
+        原材料涨价 ${price>0?'+':''}${price}% + 订单量变化 ${volume>0?'+':''}${volume}% → 
+        预计供应链总成本变为 <b style="color:${newCost>baseCost?'#ef4444':'#10b981'}">¥${newCost.toFixed(0)}万</b>
+        （${newCost>baseCost?'上升':'下降'} ${Math.abs((newCost-baseCost)/baseCost*100).toFixed(1)}%）<br>
+        交期延长 ${lead}天 → 建议安全库存增加约 <b>${stockNeed}天</b> 用量<br>
+        预计额外资金占用约 <b>¥${cashNeed}万</b>
+    `;
+}
+
+// ==================== 数据导入 ====================
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+uploadZone.onclick = ()=>fileInput.click();
+uploadZone.ondragover = (e)=>{e.preventDefault(); uploadZone.classList.add('dragover');};
+uploadZone.ondragleave = ()=>uploadZone.classList.remove('dragover');
+uploadZone.ondrop = (e)=>{e.preventDefault(); uploadZone.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]);};
+fileInput.onchange = (e)=>handleFile(e.target.files[0]);
+
+let parsedData = [];
+let parsedHeaders = [];
+
+function handleFile(file) {
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data,{type:'array'});
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet,{header:1});
+        parsedHeaders = json[0];
+        parsedData = json.slice(1).filter(r=>r.some(c=>c!==undefined&&c!==''));
+        showImportPreview();
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function showImportPreview() {
+    document.getElementById('importPreview').classList.remove('hidden');
+    const mapDiv = document.getElementById('fieldMap');
+    mapDiv.innerHTML = '';
+    parsedHeaders.forEach((h,i)=>{
+        const row = document.createElement('div'); row.className='field-row';
+        row.innerHTML = `
+            <div class="label">原始字段: <b>${h}</b></div>
+            <select id="map-${i}">
+                <option value="">-- 不导入 --</option>
+                <option value="new">+ 新建字段</option>
+                ${appData.templates.purchase.map(f=>`<option value="${f.name}">${f.name}</option>`).join('')}
+            </select>
+            <select id="unit-${i}">
+                <option value="">保持原单位</option>
+                ${appData.unitRules.map(u=>`<option value="${u.from}">${u.from}→${u.to}</option>`).join('')}
+            </select>
+            <label style="font-size:13px"><input type="checkbox" id="req-${i}" checked> 导入</label>
+        `;
+        mapDiv.appendChild(row);
+        // 自动匹配
+        const match = appData.templates.purchase.find(f=>f.name===h||f.name.includes(h)||h.includes(f.name));
+        if(match) document.getElementById(`map-${i}`).value = match.name;
+    });
+    
+    // 预览表格
+    const preview = parsedData.slice(0,20);
+    let html = '<table><thead><tr>'+parsedHeaders.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>';
+    preview.forEach(row=>{
+        html += '<tr>'+parsedHeaders.map((_,i)=>`<td>${row[i]!==undefined?row[i]:''}</td>`).join('')+'</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('previewTable').innerHTML = html;
+}
+
+function confirmImport() {
+    const mapped = [];
+    parsedData.forEach(row=>{
+        const obj = {};
+        parsedHeaders.forEach((h,i)=>{
+            const field = document.getElementById(`map-${i}`).value;
+            const importIt = document.getElementById(`req-${i}`).checked;
+            if(field && field!=='new' && importIt) {
+                let val = row[i];
+                const unitSel = document.getElementById(`unit-${i}`).value;
+                if(unitSel) {
+                    const rule = appData.unitRules.find(u=>u.from===unitSel);
+                    if(rule && typeof val==='number') val = val * rule.factor;
+                }
+                obj[field] = val;
+            }
+        });
+        if(Object.keys(obj).length) mapped.push(obj);
+    });
+    appData.purchase = [...appData.purchase, ...mapped];
+    document.getElementById('importPreview').classList.add('hidden');
+    document.getElementById('importedDataCard').style.display = 'block';
+    renderImportedTable();
+    alert(`导入成功！共导入 ${mapped.length} 条记录`);
+}
+
+function cancelImport() {
+    document.getElementById('importPreview').classList.add('hidden');
+    parsedData = []; parsedHeaders = [];
+}
+
+function renderImportedTable() {
+    const data = appData.purchase.slice(-100);
+    const keys = Object.keys(data[0]||{});
+    let html = '<table><thead><tr>'+keys.map(k=>`<th>${k}</th>`).join('')+'</tr></thead><tbody>';
+    data.forEach(row=>{
+        html += '<tr>'+keys.map(k=>`<td>${row[k]!==undefined?row[k]:''}</td>`).join('')+'</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('importedTable').innerHTML = html;
+}
+
+function filterImported() {
+    const q = document.getElementById('searchImported').value.toLowerCase();
+    const cat = document.getElementById('filterCategory').value;
+    let data = appData.purchase;
+    if(q) data = data.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(q)));
+    if(cat) data = data.filter(r=>r.采购类型===cat);
+    const keys = Object.keys(data[0]||{});
+    let html = '<table><thead><tr>'+keys.map(k=>`<th>${k}</th>`).join('')+'</tr></thead><tbody>';
+    data.slice(-100).forEach(row=>{
+        html += '<tr>'+keys.map(k=>`<td>${row[k]!==undefined?row[k]:''}</td>`).join('')+'</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('importedTable').innerHTML = html;
+}
+
+function clearImported() {
+    if(confirm('确定清空所有已导入数据？')) { appData.purchase=[]; renderImportedTable(); }
+}
+
+function exportImported() {
+    const ws = XLSX.utils.json_to_sheet(appData.purchase);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'采购数据');
+    XLSX.writeFile(wb,'供应链采购数据导出.xlsx');
+}
+
+// ==================== 模板配置 ====================
+function switchTplTab(type) {
+    document.querySelectorAll('.tpl-panel').forEach(p=>p.classList.add('hidden'));
+    document.getElementById('tpl-'+type).classList.remove('hidden');
+    document.querySelectorAll('.tab-sub button').forEach(b=>b.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+function renderTemplates() {
+    ['purchase','inventory','sales','supplier'].forEach(type=>{
+        const tbody = document.querySelector(`#tbl-tpl-${type} tbody`);
+        tbody.innerHTML = '';
+        appData.templates[type].forEach((f,i)=>{
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input value="${f.name}" onchange="updateTpl('${type}',${i},'name',this.value)" style="width:100%"></td>
+                <td><select onchange="updateTpl('${type}',${i},'type',this.value)">
+                    <option ${f.type==='文本'?'selected':''}>文本</option>
+                    <option ${f.type==='数字'?'selected':''}>数字</option>
+                    <option ${f.type==='金额'?'selected':''}>金额</option>
+                    <option ${f.type==='日期'?'selected':''}>日期</option>
+                    <option ${f.type==='百分比'?'selected':''}>百分比</option>
+                    <option ${f.type==='枚举'?'selected':''}>枚举</option>
+                </select></td>
+                <td><input value="${f.unit}" onchange="updateTpl('${type}',${i},'unit',this.value)" style="width:80px"></td>
+                <td><input type="checkbox" ${f.required?'checked':''} onchange="updateTpl('${type}',${i},'required',this.checked)"></td>
+                <td><input value="${f.rule}" onchange="updateTpl('${type}',${i},'rule',this.value)" style="width:100%"></td>
+                <td><button class="btn btn-danger" onclick="delTplRow('${type}',${i})" style="padding:4px 10px">删除</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    });
+    
+    // 单位规则
+    const ubody = document.getElementById('unitRulesBody');
+    ubody.innerHTML = '';
+    appData.unitRules.forEach((r,i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input value="${r.from}" onchange="updateUnit(${i},'from',this.value)" style="width:80px"></td>
+            <td><input value="${r.to}" onchange="updateUnit(${i},'to',this.value)" style="width:80px"></td>
+            <td><input value="${r.factor}" onchange="updateUnit(${i},'factor',parseFloat(this.value))" style="width:80px"></td>
+            <td><input value="${r.scene}" onchange="updateUnit(${i},'scene',this.value)" style="width:120px"></td>
+            <td><button class="btn btn-danger" onclick="delUnit(${i})" style="padding:4px 10px">删除</button></td>
+        `;
+        ubody.appendChild(tr);
+    });
+}
+
+function updateTpl(type,idx,field,val) { appData.templates[type][idx][field]=val; }
+function delTplRow(type,idx) { appData.templates[type].splice(idx,1); renderTemplates(); }
+function addTplRow(type) { appData.templates[type].push({name:'新字段',type:'文本',unit:'-',required:false,rule:'-'}); renderTemplates(); }
+function resetTpl(type) {
+    // 恢复默认
+    if(type==='purchase') appData.templates.purchase = JSON.parse(JSON.stringify([
+        {name:'采购单号',type:'文本',unit:'-',required:true,rule:'唯一标识'},
+        {name:'物料编码',type:'文本',unit:'-',required:true,rule:'关联物料主数据'},
+        {name:'物料名称',type:'文本',unit:'-',required:true,rule:'-'},
+        {name:'供应商',type:'文本',unit:'-',required:true,rule:'关联供应商主数据'},
+        {name:'采购数量',type:'数字',unit:'件',required:true,rule:'统一换算为基本单位'},
+        {name:'单价',type:'金额',unit:'元',required:true,rule:'不含税'},
+        {name:'采购金额',type:'金额',unit:'元',required:false,rule:'=数量×单价'},
+        {name:'下单日期',type:'日期',unit:'-',required:true,rule:'YYYY-MM-DD'},
+        {name:'要求交期',type:'日期',unit:'-',required:true,rule:'YYYY-MM-DD'},
+        {name:'实际交期',type:'日期',unit:'-',required:false,rule:'用于计算OTD'},
+        {name:'采购类型',type:'枚举',unit:'-',required:true,rule:'原材料/半成品/成品/MRO'},
+        {name:'所属项目',type:'文本',unit:'-',required:false,rule:'可空'}
+    ]));
+    renderTemplates();
+}
+function downloadTpl(type) {
+    const headers = appData.templates[type].map(f=>f.name);
+    const ws = XLSX.utils.aoa_to_sheet([headers]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,type+'模板');
+    XLSX.writeFile(wb,`供应链_${type}_导入模板.xlsx`);
+}
+function updateUnit(idx,field,val) { appData.unitRules[idx][field]=val; }
+function delUnit(idx) { appData.unitRules.splice(idx,1); renderTemplates(); }
+function addUnitRule() { appData.unitRules.push({from:'',to:'',factor:1,scene:''}); renderTemplates(); }
+function resetUnitRules() {
+    appData.unitRules = [
+        {from:'吨',to:'千克',factor:1000,scene:'重量'},
+        {from:'千克',to:'千克',factor:1,scene:'重量'},
+        {from:'克',to:'千克',factor:0.001,scene:'重量'},
+        {from:'万件',to:'件',factor:10000,scene:'数量'},
+        {from:'千件',to:'件',factor:1000,scene:'数量'},
+        {from:'百件',to:'件',factor:100,scene:'数量'},
+        {from:'万元',to:'元',factor:10000,scene:'金额'},
+        {from:'千元',to:'元',factor:1000,scene:'金额'},
+        {from:'周',to:'天',factor:7,scene:'时间'},
+        {from:'月',to:'天',factor:30,scene:'时间'}
+    ];
+    renderTemplates();
+}
+
+// ==================== 初始化 ====================
+window.onload = ()=>{
+    generateMockData();
+    initDashboard();
+};
+</script>
+</body>
+</html>
