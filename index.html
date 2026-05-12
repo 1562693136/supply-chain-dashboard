@@ -12,13 +12,13 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .app{display:flex;flex-direction:column;height:100vh}
 
 /* 顶部导航 */
-.topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;height:48px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.topbar h1{font-size:15px;font-weight:600;color:#111827;white-space:nowrap}
+.topbar{background:#1e3a8a;border-bottom:1px solid #1e40af;padding:0 16px;height:48px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.topbar h1{font-size:15px;font-weight:600;color:#fff;white-space:nowrap}
 .topnav{display:flex;gap:2px;overflow-x:auto;flex:1;justify-content:flex-end;margin-left:16px}
 .topnav::-webkit-scrollbar{display:none}
-.nav-item{padding:6px 12px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;border:none;background:transparent;color:#6b7280;transition:.15s;white-space:nowrap;flex-shrink:0}
-.nav-item:hover{color:#374151;background:#f3f4f6}
-.nav-item.active{color:#fff;background:#1e3a8a}
+.nav-item{padding:6px 12px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;border:none;background:transparent;color:rgba(255,255,255,.7);transition:.15s;white-space:nowrap;flex-shrink:0}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.15)}
+.nav-item.active{color:#1e3a8a;background:#fff}
 
 /* 主体 */
 .main{display:flex;flex:1;overflow:hidden}
@@ -115,9 +115,25 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 .rank-3{background:#f8fafc}
 .rank-last{background:#fee2e2}
 
-/* 填空展示块 */
-.fill-block{background:#fff;border-radius:6px;padding:12px 14px;border:1px solid #e5e7eb;margin-bottom:10px;font-size:12px;line-height:1.8;color:#374151;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.fill-block b{color:#1e3a8a;font-weight:600}
+/* 报告头部 */
+  .report-header{background:#fff;border-radius:6px;padding:14px 16px;border:1px solid #e5e7eb;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .report-header h2{font-size:14px;font-weight:700;color:#1e3a8a;margin-bottom:8px}
+  .report-meta{display:flex;gap:16px;font-size:11px;color:#6b7280;flex-wrap:wrap}
+  .report-meta span{display:flex;align-items:center;gap:4px}
+  .report-meta input{border:none;border-bottom:1px solid #d1d5db;padding:2px 4px;font-size:11px;color:#374151;width:80px;text-align:center;background:transparent}
+  .report-meta input:focus{outline:none;border-bottom-color:#3b82f6}
+
+  /* 填空输入 */
+  .fill-input{display:inline-block;border:none;border-bottom:1px solid #9ca3af;padding:1px 4px;font-size:12px;color:#1e3a8a;min-width:40px;text-align:center;background:transparent;font-weight:600}
+  .fill-input:focus{outline:none;border-bottom-color:#3b82f6;background:#eff6ff}
+
+  /* 章节标题 */
+  .section-title{font-size:13px;font-weight:700;color:#1e3a8a;margin:12px 0 8px;padding-left:10px;border-left:4px solid #1e3a8a}
+  .sub-section-title{font-size:12px;font-weight:600;color:#374151;margin:10px 0 6px}
+
+  /* 分析文本块 */
+  .analysis-text{font-size:12px;line-height:2;color:#374151;background:#fff;border-radius:6px;padding:12px 14px;border:1px solid #e5e7eb;margin-bottom:10px}
+  .analysis-text b{color:#1e3a8a;font-weight:600}
 
 /* 上传 */
 .upload-zone{border:2px dashed #d1d5db;border-radius:6px;padding:16px;text-align:center;cursor:pointer;background:#fafafa;transition:.15s}
@@ -151,7 +167,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
     <!-- 左侧操作界面 -->
     <div class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <span id="sidebarTitle">操作界面</span>
+        <span id="sidebarTitle">数据录入与编辑</span>
         <button class="toggle-btn" onclick="toggleSidebar()">◀</button>
       </div>
       <div class="sidebar-body" id="sidebarBody">
@@ -166,6 +182,15 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
 
       <!-- 总览 -->
       <div class="panel active" id="panel-overview">
+        <div class="report-header">
+          <h2>研产销一体化制造业供应链经营分析报告</h2>
+          <div class="report-meta">
+            <span>报告期：<input value="2026年5月"></span>
+            <span>填表部门：<input value="供应链管理部"></span>
+            <span>填表人：<input value=""></span>
+            <span>审核人：<input value=""></span>
+          </div>
+        </div>
         <div class="kpi-row">
           <div class="kpi-card" onclick="focusEdit('kpi1')">
             <div class="label">供应链总成本占营收比</div>
@@ -227,12 +252,12 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
             <table class="show-table" id="rd-table-2"><thead><tr><th>指标</th><th>实际值</th><th>目标值</th><th>偏差率</th><th>备注</th></tr></thead><tbody></tbody></table>
           </div>
         </div>
-        <div class="fill-block" id="rd-fill">
+        <div class="analysis-text" id="rd-fill">
           <b>3. 成本前置管控分析</b><br>
-          <b>• 设计降本达成：</b>当期研发阶段预计年降本金额 <u>320</u> 万元，年度目标完成率 <u>85</u> %，核心降本措施说明：<br>
-          a. 结构件材料替代：铝合金→高强度工程塑料，预计单件降本 <u>12</u> 元<br>
-          b. 板级器件归一化减少SKU 30%，降低采购管理成本<br><br>
-          <b>• 选型合规性：</b>当期新选型物料中已有3家以上合格供应商占比 <u>78</u> %，目标 <u>85</u> %，偏差原因 <u>新引入的2款芯片目前仅1家国产供应商通过验证</u>
+          <b>• 设计降本达成：</b>当期研发阶段预计年降本金额 <input class="fill-input" value="320"> 万元，年度目标完成率 <input class="fill-input" value="85"> %，核心降本措施说明：<br>
+          a. 结构件材料替代：铝合金→高强度工程塑料，预计单件降本 <input class="fill-input" value="12"> 元<br>
+          b. 板级器件归一化减少SKU <input class="fill-input" value="30">%，降低采购管理成本<br><br>
+          <b>• 选型合规性：</b>当期新选型物料中已有3家以上合格供应商占比 <input class="fill-input" value="78"> %，目标 <input class="fill-input" value="85"> %，偏差原因 <input class="fill-input" value="新引入的2款芯片目前仅1家国产供应商通过验证" style="min-width:200px">
         </div>
       </div>
 
@@ -243,25 +268,25 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
           <div class="chart-title">1. 当期采购概况</div>
           <table class="show-table" id="pur-table-1"><thead><tr><th>指标</th><th>实际值</th><th>目标值</th><th>偏差率</th><th>备注</th></tr></thead><tbody></tbody></table>
         </div>
-        <div class="fill-block" id="pur-fill-1">
-          <b>🔹 采购结构分析：</b>原材料采购占比48%，零部件32%，电子件16%，包材及MRO 4%。<br><br>
+        <div class="analysis-text" id="pur-fill-1">
+          <b>🔹 采购结构分析：</b>原材料采购占比<input class="fill-input" value="48">%，零部件<input class="fill-input" value="32">%，电子件<input class="fill-input" value="16">%，包材及MRO <input class="fill-input" value="4">%。<br><br>
           <b>2. 采购量价分析</b><br>
-          <b>• 价格分析：</b>核心物料共56种，其中涨价15种（涨幅3-8%），降价22种（降幅2-12%），持平19种。<br>
-          <b>• 年度谈价降本达成：</b>当期降本185万元，年度目标完成率72%，目标缺口主要集中在Q3大宗物料锁价。<br>
-          <b>• 价格与需求匹配度：</b>当期货物均价与年度预算偏差+4.2%，主要受铜材价格波动影响。
+          <b>• 价格分析：</b>核心物料共<input class="fill-input" value="56">种，其中涨价<input class="fill-input" value="15">种（涨幅3-8%），降价<input class="fill-input" value="22">种（降幅2-12%），持平<input class="fill-input" value="19">种。<br>
+          <b>• 年度谈价降本达成：</b>当期降本<input class="fill-input" value="185">万元，年度目标完成率<input class="fill-input" value="72">%，目标缺口主要集中在Q3大宗物料锁价。<br>
+          <b>• 价格与需求匹配度：</b>当期货物均价与年度预算偏差+<input class="fill-input" value="4.2">%，主要受铜材价格波动影响。
         </div>
         <div class="chart-box chart-full">
           <div class="chart-title">3. 供应商绩效排名（Top3 / 末3）</div>
           <table class="show-table" id="pur-table-2"><thead><tr><th>排名</th><th>供应商名称</th><th>交付及时率</th><th>质量合格率</th><th>定级</th></tr></thead><tbody></tbody></table>
         </div>
-        <div class="fill-block" id="pur-fill-2">
-          <b>4. 供应商账期分析：</b>平均账期45天，目标50天，较上月缩短3天。<br>
-          <b>• 账期变动原因：</b>上游原材料紧张，2家核心供应商要求预付款比例从30%提升至50%。<br><br>
+        <div class="analysis-text" id="pur-fill-2">
+          <b>4. 供应商账期分析：</b>平均账期<input class="fill-input" value="45">天，目标<input class="fill-input" value="50">天，较上月缩短<input class="fill-input" value="3">天。<br>
+          <b>• 账期变动原因：</b>上游原材料紧张，2家核心供应商要求预付款比例从<input class="fill-input" value="30">%提升至<input class="fill-input" value="50">%。<br><br>
           <b>5. 行情与节降分析</b><br>
           <b>• 大宗商品行情预判：</b><br>
-          a. 铜材：预计上涨5-8%，建议Q2提前锁价30%<br>
+          a. 铜材：预计上涨<input class="fill-input" value="5-8">%，建议Q2提前锁价<input class="fill-input" value="30">%<br>
           b. 塑胶：预计持平，产能充足<br>
-          <b>• 采购降本占总成本节降比例：</b>当期采购节降贡献占总降本额的62%。
+          <b>• 采购降本占总成本节降比例：</b>当期采购节降贡献占总降本额的<input class="fill-input" value="62">%。
         </div>
       </div>
 
@@ -282,12 +307,12 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
           <div class="chart-title">3. 损耗、质量与专项分析</div>
           <table class="show-table" id="prod-table-3"><thead><tr><th>指标</th><th>实际值</th><th>目标值</th><th>偏差率</th><th>备注</th></tr></thead><tbody></tbody></table>
         </div>
-        <div class="fill-block" id="prod-fill">
+        <div class="analysis-text" id="prod-fill">
           <b>• TOP3 根因：</b><br>
           1. 来料锡膏活性不足（已切换供应商）<br>
           2. 工装夹具磨损（已安排更换）<br>
           3. 新员工操作不熟练（加强培训）<br><br>
-          <b>• 专项改善成果：</b>当期精益生产项目共4个，实现降本68万元
+          <b>• 专项改善成果：</b>当期精益生产项目共<input class="fill-input" value="4">个，实现降本<input class="fill-input" value="68">万元
         </div>
       </div>
 
@@ -304,9 +329,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
             <div class="chart" id="chart-inv-pie"></div>
           </div>
         </div>
-        <div class="fill-block" id="inv-fill">
-          <b>• 呆滞物料金额：</b>120万元，较上月增加15万，主要因需求变更导致2款成品专用料积压。<br>
-          <b>• 处理措施：</b>已启动呆滞料替代使用方案，预计Q2消化60%。
+        <div class="analysis-text" id="inv-fill">
+          <b>• 呆滞物料金额：</b><input class="fill-input" value="120">万元，较上月增加<input class="fill-input" value="15">万，主要因需求变更导致<input class="fill-input" value="2">款成品专用料积压。<br>
+          <b>• 处理措施：</b>已启动呆滞料替代使用方案，预计Q2消化<input class="fill-input" value="60">%。
         </div>
       </div>
 
@@ -323,8 +348,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
             <div class="chart" id="chart-sales-line"></div>
           </div>
         </div>
-        <div class="fill-block" id="sales-fill">
-          <b>• 滞销成品金额：</b>85万元，主要因客户项目延期导致2款定制产品未提货。<br>
+        <div class="analysis-text" id="sales-fill">
+          <b>• 滞销成品金额：</b><input class="fill-input" value="85">万元，主要因客户项目延期导致<input class="fill-input" value="2">款定制产品未提货。<br>
           <b>• 处理措施：</b>已与客户协商延期交货方案，同时启动通用化改造评估。
         </div>
       </div>
@@ -346,9 +371,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','P
             <table class="show-table" id="cross-table-2"><thead><tr><th>异常类型</th><th>发生次数</th><th>闭环率</th><th>平均处理周期</th><th>责任部门</th></tr></thead><tbody></tbody></table>
           </div>
         </div>
-        <div class="fill-block" id="cross-fill">
-          <b>• 全链路库存资金占用：</b>当期库存资金占用1,250万，目标1,100万，偏差+13.6%。<br>
-          <b>• 改善建议：</b>推进VMI模式，将2家战略供应商纳入供应商管理库存。
+        <div class="analysis-text" id="cross-fill">
+          <b>• 全链路库存资金占用：</b>当期库存资金占用<input class="fill-input" value="1,250">万，目标<input class="fill-input" value="1,100">万，偏差+<input class="fill-input" value="13.6">%。<br>
+          <b>• 改善建议：</b>推进VMI模式，将<input class="fill-input" value="2">家战略供应商纳入供应商管理库存。
         </div>
       </div>
 
